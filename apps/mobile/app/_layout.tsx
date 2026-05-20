@@ -1,13 +1,16 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useFonts } from 'expo-font';
 import * as SplashScreen from 'expo-splash-screen';
 import { Colors } from '../services/theme';
+import { hasCompletedOnboarding } from './onboarding';
 
 SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
+  const [onboardingDone, setOnboardingDone] = useState<boolean | null>(null);
+
   const [loaded] = useFonts({
     DMSerifDisplay: require('../assets/fonts/DMSerifDisplay-Regular.ttf'),
     DMSans: require('../assets/fonts/DMSans-Regular.ttf'),
@@ -17,19 +20,34 @@ export default function RootLayout() {
   });
 
   useEffect(() => {
-    if (loaded) SplashScreen.hideAsync();
-  }, [loaded]);
+    async function init() {
+      const done = await hasCompletedOnboarding();
+      setOnboardingDone(done);
+    }
+    init();
+  }, []);
 
-  if (!loaded) return null;
+  useEffect(() => {
+    if (loaded && onboardingDone !== null) {
+      SplashScreen.hideAsync();
+    }
+  }, [loaded, onboardingDone]);
+
+  if (!loaded || onboardingDone === null) return null;
 
   return (
     <>
-      <StatusBar style="light" />
-      <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: Colors.bg } }}>
+      <StatusBar style="dark" />
+      <Stack
+        screenOptions={{
+          headerShown: false,
+          contentStyle: { backgroundColor: Colors.bg },
+        }}
+        initialRouteName={onboardingDone ? '(tabs)' : 'onboarding'}
+      >
+        <Stack.Screen name="onboarding" />
         <Stack.Screen name="(tabs)" />
-        <Stack.Screen
-          name="result"
-        />
+        <Stack.Screen name="result" />
       </Stack>
     </>
   );

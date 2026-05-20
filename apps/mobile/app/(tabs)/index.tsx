@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useCallback, useMemo } from 'react';
+import { useState, useRef, useCallback, useMemo } from 'react';
 import {
   View,
   Text,
@@ -10,7 +10,6 @@ import {
   Platform,
   ActivityIndicator,
   Alert,
-  Animated,
   Dimensions,
 } from 'react-native';
 import { useRouter, useFocusEffect } from 'expo-router';
@@ -18,8 +17,8 @@ import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { processDump } from '../../services/api';
 import { saveToHistory, getHistory, DumpEntry } from '../../services/storage';
+import { consumePendingTranscript } from '../../services/voiceSession';
 import { Colors, Fonts, Spacing, Radius } from '../../services/theme';
-import { useVoiceInput } from '../../hooks/useVoiceInput';
 
 const PROMPTS = [
   "What's on your mind today?",
@@ -53,12 +52,6 @@ const RECENT_ICONS = [
   'sparkles-outline',
   'document-text-outline',
 ] as const;
-
-function formatDuration(seconds: number): string {
-  const m = Math.floor(seconds / 60).toString().padStart(2, '0');
-  const s = (seconds % 60).toString().padStart(2, '0');
-  return `${m}:${s}`;
-}
 
 function LogoMark() {
   return (
@@ -94,45 +87,19 @@ export default function DumpScreen() {
   const [promptIndex] = useState(() => Math.floor(Math.random() * PROMPTS.length));
   const inputRef = useRef<TextInput>(null);
   const router = useRouter();
-  const pulseAnim = useRef(new Animated.Value(1)).current;
-  const pulseLoopRef = useRef<Animated.CompositeAnimation | null>(null);
-
-  const { voiceState, startRecording, stopAndTranscribe, cancelRecording, recordingDuration } = useVoiceInput();
 
   const charCount = text.length;
   const isReady = text.trim().length > 10;
-  const isRecording = voiceState === 'recording';
 
   useFocusEffect(
     useCallback(() => {
       getHistory().then(setHistory);
+      const transcript = consumePendingTranscript();
+      if (transcript) {
+        setText(prev => (prev ? `${prev} ${transcript}` : transcript));
+      }
     }, []),
   );
-
-  useEffect(() => {
-    if (voiceState !== 'recording') {
-      pulseLoopRef.current?.stop();
-      pulseLoopRef.current = null;
-      pulseAnim.stopAnimation();
-      pulseAnim.setValue(1);
-      return;
-    }
-
-    const loop = Animated.loop(
-      Animated.sequence([
-        Animated.timing(pulseAnim, { toValue: 1.06, duration: 700, useNativeDriver: true }),
-        Animated.timing(pulseAnim, { toValue: 1, duration: 700, useNativeDriver: true }),
-      ]),
-    );
-    pulseLoopRef.current = loop;
-    loop.start();
-
-    return () => {
-      loop.stop();
-      pulseLoopRef.current = null;
-      pulseAnim.setValue(1);
-    };
-  }, [voiceState, pulseAnim]);
 
   const filteredRecent = useMemo(() => {
     const q = searchQuery.trim().toLowerCase();
@@ -147,17 +114,6 @@ export default function DumpScreen() {
       )
       .slice(0, 4);
   }, [history, searchQuery]);
-
-  async function handleVoicePress() {
-    if (voiceState === 'idle') {
-      await startRecording();
-    } else if (voiceState === 'recording') {
-      const transcript = await stopAndTranscribe();
-      if (transcript) {
-        setText(prev => (prev ? prev + ' ' + transcript : transcript));
-      }
-    }
-  }
 
   async function handleProcess() {
     if (!isReady || loading) return;
@@ -223,43 +179,31 @@ export default function DumpScreen() {
                 <View style={styles.heroGradientBottom} />
                 <HeroIllustration />
 
-                {isRecording ? (
-                  <View style={styles.heroRecording}>
-                    <View style={styles.recordingDot} />
-                    <Text style={styles.recordingText}>
-                      Listening {formatDuration(recordingDuration)}
-                    </Text>
-                    <TouchableOpacity onPress={cancelRecording} style={styles.recordingCancel}>
-                      <Text style={styles.recordingCancelText}>Cancel</Text>
-                    </TouchableOpacity>
-                  </View>
-                ) : (
-                  <View style={styles.heroInputRow}>
-                    <TextInput
-                      ref={inputRef}
-                      style={styles.heroInput}
-                      value={text}
-                      onChangeText={t => setText(t.slice(0, CHAR_LIMIT))}
-                      placeholder="Dump your thoughts..."
-                      placeholderTextColor={Colors.textDim}
-                      multiline
-                      maxLength={CHAR_LIMIT}
-                    />
-                    <TouchableOpacity
-                      style={[styles.heroSubmit, (!isReady || loading) && styles.heroSubmitDisabled]}
-                      onPress={handleProcess}
-                      disabled={!isReady || loading || isRecording}
-                    >
-                      {loading ? (
-                        <ActivityIndicator size="small" color="#fff" />
-                      ) : (
-                        <Ionicons name="sparkles" size={18} color="#fff" />
-                      )}
-                    </TouchableOpacity>
-                  </View>
-                )}
+                <View style={styles.heroInputRow}>
+                  <TextInput
+                    ref={inputRef}
+                    style={styles.heroInput}
+                    value={text}
+                    onChangeText={t => setText(t.slice(0, CHAR_LIMIT))}
+                    placeholder="Dump your thoughts..."
+                    placeholderTextColor={Colors.textDim}
+                    multiline
+                    maxLength={CHAR_LIMIT}
+                  />
+                  <TouchableOpacity
+                    style={[styles.heroSubmit, (!isReady || loading) && styles.heroSubmitDisabled]}
+                    onPress={handleProcess}
+                    disabled={!isReady || loading}
+                  >
+                    {loading ? (
+                      <ActivityIndicator size="small" color="#fff" />
+                    ) : (
+                      <Ionicons name="sparkles" size={18} color="#fff" />
+                    )}
+                  </TouchableOpacity>
+                </View>
               </View>
-              {charCount > 0 && !isRecording && (
+              {charCount > 0 && (
                 <Text style={styles.charHint}>
                   {charCount} / {CHAR_LIMIT}
                 </Text>
@@ -279,29 +223,14 @@ export default function DumpScreen() {
                 <Text style={styles.darkCardText}>Start typing</Text>
               </TouchableOpacity>
 
-              <Animated.View style={{ transform: [{ scale: pulseAnim }], flex: 1 }}>
-                <TouchableOpacity
-                  style={[styles.sageCard, isRecording && styles.sageCardRecording]}
-                  onPress={handleVoicePress}
-                  disabled={voiceState === 'processing' || voiceState === 'requesting'}
-                  activeOpacity={0.9}
-                >
-                  {voiceState === 'processing' || voiceState === 'requesting' ? (
-                    <ActivityIndicator size="small" color={Colors.textMuted} />
-                  ) : (
-                    <>
-                      <Ionicons
-                        name={isRecording ? 'stop' : 'mic-outline'}
-                        size={22}
-                        color={Colors.textMuted}
-                      />
-                      <Text style={styles.sageCardText}>
-                        {isRecording ? formatDuration(recordingDuration) : 'Voice input'}
-                      </Text>
-                    </>
-                  )}
-                </TouchableOpacity>
-              </Animated.View>
+              <TouchableOpacity
+                style={[styles.sageCard, { flex: 1 }]}
+                onPress={() => router.push('/voice')}
+                activeOpacity={0.9}
+              >
+                <Ionicons name="mic-outline" size={22} color={Colors.textMuted} />
+                <Text style={styles.sageCardText}>Voice input</Text>
+              </TouchableOpacity>
             </View>
           </View>
 
@@ -553,34 +482,6 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     borderColor: Colors.heroBlue,
   },
-  heroRecording: {
-    margin: Spacing.sm,
-    backgroundColor: Colors.bgCard,
-    borderRadius: Radius.lg,
-    padding: Spacing.md,
-    alignItems: 'center',
-    gap: Spacing.sm,
-  },
-  recordingDot: {
-    width: 10,
-    height: 10,
-    borderRadius: 5,
-    backgroundColor: Colors.high,
-  },
-  recordingText: {
-    fontFamily: Fonts.body,
-    fontSize: 14,
-    color: Colors.textMuted,
-  },
-  recordingCancel: {
-    paddingVertical: 4,
-    paddingHorizontal: 12,
-  },
-  recordingCancelText: {
-    fontFamily: Fonts.body,
-    fontSize: 13,
-    color: Colors.textDim,
-  },
   heroInputRow: {
     flexDirection: 'row',
     alignItems: 'flex-end',
@@ -648,9 +549,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: Spacing.sm,
-  },
-  sageCardRecording: {
-    backgroundColor: Colors.teal,
   },
   sageCardText: {
     fontFamily: Fonts.body,

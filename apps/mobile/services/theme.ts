@@ -1,40 +1,52 @@
 export const Colors = {
-  bg: '#0A0A0F',
-  bgCard: '#12121A',
-  bgElevated: '#1A1A26',
-  border: '#2A2A3A',
-  borderLight: '#32324A',
+  // Backgrounds
+  bg: '#F5F7EE',           // warm off-white (like the reference)
+  bgCard: '#FFFFFF',
+  bgElevated: '#ECEEE5',
+  border: '#E0E3D8',
+  borderLight: '#ECEEE5',
 
-  accent: '#7C6AF7',       // violet
-  accentSoft: '#7C6AF720',
-  accentGlow: '#7C6AF740',
+  // Accents
+  accent: '#C1F645',        // lime green
+  accentSoft: '#C1F64520',
+  accentGlow: '#C1F64540',
+  accentDark: '#8FB832',    // darker lime for text on light bg
 
+  teal: '#B0F1DC',
+  tealSoft: '#B0F1DC30',
+
+  // Priority
   high: '#FF5A5A',
-  highSoft: '#FF5A5A20',
+  highSoft: '#FF5A5A15',
   medium: '#FFB340',
-  mediumSoft: '#FFB34020',
-  low: '#4ECDC4',
-  lowSoft: '#4ECDC420',
+  mediumSoft: '#FFB34015',
+  low: '#B0F1DC',
+  lowSoft: '#B0F1DC30',
 
-  text: '#F0EFF8',
-  textMuted: '#8887A0',
-  textDim: '#55556A',
+  // Text
+  text: '#1A1C16',          // near black
+  textMuted: '#6B6F5E',
+  textDim: '#A8AD9A',
+
+  // Dark card (like the "Start a Chat" dark card in reference)
+  darkCard: '#2E2E2E',
+  darkCardText: '#FFFFFF',
 
   // Mood colors
-  focused: '#4ECDC4',
-  overwhelmed: '#FF5A5A',
+  focused: '#B0F1DC',
+  overwhelmed: '#FF8C69',
   anxious: '#FFB340',
-  energized: '#7C6AF7',
-  scattered: '#FF8C69',
-  reflective: '#6BB8FF',
+  energized: '#C1F645',
+  scattered: '#FFD93D',
+  reflective: '#B0C4F1',
   stressed: '#FF5A5A',
-  creative: '#C77DFF',
+  creative: '#D4A8FF',
 };
 
 export const Fonts = {
-  heading: 'DMSerifDisplay',      // elegant serif for headings
-  body: 'DMSans',                 // clean sans for body
-  mono: 'SpaceMono',              // mono for tags/codes
+  heading: 'DMSerifDisplay',
+  body: 'DMSans',
+  mono: 'SpaceMono',
 };
 
 export const Spacing = {
@@ -51,5 +63,6 @@ export const Radius = {
   md: 12,
   lg: 16,
   xl: 24,
+  xxl: 32,
   full: 999,
 };

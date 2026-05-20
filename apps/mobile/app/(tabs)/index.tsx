@@ -10,11 +10,14 @@ import {
   Platform,
   ActivityIndicator,
   Alert,
+  Animated,
 } from 'react-native';
 import { useRouter } from 'expo-router';
+import { Ionicons } from '@expo/vector-icons';
 import { processDump } from '../../services/api';
 import { saveToHistory } from '../../services/storage';
 import { Colors, Fonts, Spacing, Radius } from '../../services/theme';
+import { useVoiceInput } from '../../hooks/useVoiceInput';
 
 const PROMPTS = [
   "What's swirling in your head right now?",
@@ -26,28 +29,67 @@ const PROMPTS = [
 
 const CHAR_LIMIT = 3000;
 
+function formatDuration(seconds: number): string {
+  const m = Math.floor(seconds / 60).toString().padStart(2, '0');
+  const s = (seconds % 60).toString().padStart(2, '0');
+  return `${m}:${s}`;
+}
+
 export default function DumpScreen() {
   const [text, setText] = useState('');
   const [loading, setLoading] = useState(false);
   const [promptIndex] = useState(() => Math.floor(Math.random() * PROMPTS.length));
   const inputRef = useRef<TextInput>(null);
   const router = useRouter();
+  const pulseAnim = useRef(new Animated.Value(1)).current;
+
+  const { voiceState, startRecording, stopRecording, cancelRecording, recordingDuration } = useVoiceInput();
 
   const charCount = text.length;
   const isReady = text.trim().length > 10;
+  const isRecording = voiceState === 'recording';
+
+  // Pulse animation for recording button
+  const startPulse = () => {
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(pulseAnim, { toValue: 1.2, duration: 600, useNativeDriver: true }),
+        Animated.timing(pulseAnim, { toValue: 1, duration: 600, useNativeDriver: true }),
+      ])
+    ).start();
+  };
+
+  const stopPulse = () => {
+    pulseAnim.stopAnimation();
+    Animated.timing(pulseAnim, { toValue: 1, duration: 200, useNativeDriver: true }).start();
+  };
+
+  async function handleVoicePress() {
+    if (voiceState === 'idle') {
+      await startRecording();
+      startPulse();
+    } else if (voiceState === 'recording') {
+      stopPulse();
+      const uri = await stopRecording();
+      if (uri) {
+        // In production: send uri to Whisper/Deepgram for transcription
+        // For now append a placeholder so the UI flow is demonstrable
+        setText(prev =>
+          prev
+            ? prev + '\n[Voice note recorded — transcription API needed]'
+            : '[Voice note recorded — transcription API needed]'
+        );
+      }
+    }
+  }
 
   async function handleProcess() {
     if (!isReady || loading) return;
-    console.log('BUTTON PRESSED, text:', text);  // ← add this
     setLoading(true);
-
     try {
       const response = await processDump(text);
       const entry = await saveToHistory(text, response.data);
-      router.push({
-        pathname: '/result',
-        params: { entryId: entry.id },
-      });
+      router.push({ pathname: '/result', params: { entryId: entry.id } });
       setText('');
     } catch (err: any) {
       Alert.alert('Something went wrong', err.message || 'Please try again.');
@@ -55,6 +97,19 @@ export default function DumpScreen() {
       setLoading(false);
     }
   }
+
+  const getMicIcon = () => {
+    if (voiceState === 'recording') return 'stop';
+    if (voiceState === 'processing') return 'hourglass';
+    if (voiceState === 'requesting') return 'hourglass';
+    return 'mic';
+  };
+
+  const getMicColor = () => {
+    if (voiceState === 'recording') return Colors.high;
+    if (voiceState === 'error') return Colors.high;
+    return Colors.accent;
+  };
 
   return (
     <KeyboardAvoidingView
@@ -81,38 +136,70 @@ export default function DumpScreen() {
 
         {/* Input Box */}
         <TouchableOpacity activeOpacity={1} onPress={() => inputRef.current?.focus()}>
-          <View style={styles.inputContainer}>
+          <View style={[styles.inputContainer, isRecording && styles.inputRecording]}>
             <TextInput
               ref={inputRef}
               style={styles.input}
               value={text}
               onChangeText={(t) => setText(t.slice(0, CHAR_LIMIT))}
-              placeholder="Start typing your thoughts, worries, tasks, ideas... anything."
+              placeholder="Start typing your thoughts, worries, tasks, ideas... or tap the mic."
               placeholderTextColor={Colors.textDim}
               multiline
-              textAlignVertical="top"
+              textAlignVertical={'top' as const}
               maxLength={CHAR_LIMIT}
               autoCorrect={false}
+              editable={!isRecording}
             />
+
+            {/* Recording indicator inside box */}
+            {isRecording && (
+              <View style={styles.recordingIndicator}>
+                <View style={styles.recordingDot} />
+                <Text style={styles.recordingText}>
+                  Recording... {formatDuration(recordingDuration)}
+                </Text>
+                <TouchableOpacity onPress={cancelRecording}>
+                  <Text style={styles.cancelText}>Cancel</Text>
+                </TouchableOpacity>
+              </View>
+            )}
+
             <View style={styles.inputFooter}>
               <Text style={styles.charCount}>
-                {charCount > 0 ? `${charCount} / ${CHAR_LIMIT}` : ''}
+                {charCount > 0 && !isRecording ? `${charCount} / ${CHAR_LIMIT}` : ''}
               </Text>
-              {charCount > 0 && (
-                <TouchableOpacity onPress={() => setText('')}>
-                  <Text style={styles.clearBtn}>Clear</Text>
-                </TouchableOpacity>
-              )}
+              <View style={styles.inputActions}>
+                {charCount > 0 && !isRecording && (
+                  <TouchableOpacity onPress={() => setText('')}>
+                    <Text style={styles.clearBtn}>Clear</Text>
+                  </TouchableOpacity>
+                )}
+
+                {/* Mic Button */}
+                <Animated.View style={{ transform: [{ scale: pulseAnim }] }}>
+                  <TouchableOpacity
+                    style={[styles.micBtn, isRecording && styles.micBtnRecording]}
+                    onPress={handleVoicePress}
+                    disabled={voiceState === 'processing' || voiceState === 'requesting'}
+                  >
+                    {voiceState === 'processing' || voiceState === 'requesting' ? (
+                      <ActivityIndicator size="small" color={Colors.accent} />
+                    ) : (
+                      <Ionicons name={getMicIcon() as any} size={18} color={getMicColor()} />
+                    )}
+                  </TouchableOpacity>
+                </Animated.View>
+              </View>
             </View>
           </View>
         </TouchableOpacity>
 
         {/* Quick starters */}
-        {text.length === 0 && (
+        {text.length === 0 && !isRecording && (
           <View style={styles.starters}>
             <Text style={styles.startersLabel}>Try starting with...</Text>
             <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-              {['I need to...', "I'm worried about...", "Today I have...", "I keep forgetting..."].map(
+              {["I need to...", "I'm worried about...", "Today I have...", "I keep forgetting..."].map(
                 (starter) => (
                   <TouchableOpacity
                     key={starter}
@@ -133,25 +220,22 @@ export default function DumpScreen() {
         {/* Process Button */}
         <TouchableOpacity
           onPress={handleProcess}
-          disabled={!isReady || loading}
+          disabled={!isReady || loading || isRecording}
           activeOpacity={0.85}
-          style={styles.btnWrapper}
+          style={[styles.btn, (!isReady || isRecording) && styles.btnDisabled]}
         >
-          <View style={[styles.btn, { backgroundColor: isReady ? Colors.accent : Colors.bgElevated }, !isReady && styles.btnDisabled]}>
-            {loading ? (
-              <View style={styles.loadingRow}>
-                <ActivityIndicator color="#fff" size="small" />
-                <Text style={styles.btnText}>Remi is thinking...</Text>
-              </View>
-            ) : (
-              <Text style={[styles.btnText, !isReady && styles.btnTextDisabled]}>
-                Organize my thoughts →
-              </Text>
-            )}
-          </View>
+          {loading ? (
+            <View style={styles.loadingRow}>
+              <ActivityIndicator color="#fff" size="small" />
+              <Text style={styles.btnText}>Remi is thinking...</Text>
+            </View>
+          ) : (
+            <Text style={[styles.btnText, !isReady && styles.btnTextDisabled]}>
+              Organize my thoughts →
+            </Text>
+          )}
         </TouchableOpacity>
 
-        {/* Reassurance */}
         <Text style={styles.reassurance}>
           Your thoughts are processed privately and never stored on our servers.
         </Text>
@@ -216,12 +300,42 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.md,
     minHeight: 200,
   },
+  inputRecording: {
+    borderColor: Colors.high,
+    borderWidth: 1.5,
+  },
   input: {
     fontFamily: Fonts.body,
     fontSize: 16,
     color: Colors.text,
     lineHeight: 26,
-    minHeight: 160,
+    minHeight: 140,
+  },
+  recordingIndicator: {
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    gap: 8,
+    paddingVertical: Spacing.sm,
+    borderTopWidth: 1,
+    borderTopColor: Colors.border,
+    marginTop: Spacing.sm,
+  },
+  recordingDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: Colors.high,
+  },
+  recordingText: {
+    fontFamily: Fonts.mono,
+    fontSize: 13,
+    color: Colors.high,
+    flex: 1,
+  },
+  cancelText: {
+    fontFamily: Fonts.body,
+    fontSize: 13,
+    color: Colors.textMuted,
   },
   inputFooter: {
     flexDirection: 'row' as const,
@@ -237,10 +351,29 @@ const styles = StyleSheet.create({
     fontSize: 11,
     color: Colors.textDim,
   },
+  inputActions: {
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    gap: Spacing.sm,
+  },
   clearBtn: {
     fontFamily: Fonts.body,
     fontSize: 13,
     color: Colors.textMuted,
+  },
+  micBtn: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: Colors.accentSoft,
+    alignItems: 'center' as const,
+    justifyContent: 'center' as const,
+    borderWidth: 1,
+    borderColor: Colors.accent + '40',
+  },
+  micBtnRecording: {
+    backgroundColor: Colors.highSoft,
+    borderColor: Colors.high,
   },
   starters: {
     marginBottom: Spacing.lg,
@@ -267,16 +400,16 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: Colors.textMuted,
   },
-  btnWrapper: {
-    marginBottom: Spacing.md,
-  },
   btn: {
     borderRadius: Radius.lg,
     paddingVertical: 18,
     alignItems: 'center' as const,
     justifyContent: 'center' as const,
+    backgroundColor: Colors.accent,
+    marginBottom: Spacing.md,
   },
   btnDisabled: {
+    backgroundColor: Colors.bgElevated,
     opacity: 0.5,
   },
   btnText: {

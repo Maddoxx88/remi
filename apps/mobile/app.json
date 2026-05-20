@@ -14,7 +14,10 @@
     "ios": {
       "supportsTablet": false,
       "bundleIdentifier": "com.remi.app",
-      "newArchEnabled": false
+      "newArchEnabled": false,
+      "infoPlist": {
+        "NSMicrophoneUsageDescription": "Remi needs microphone access to let you speak your thoughts."
+      }
     },
     "android": {
       "adaptiveIcon": {
@@ -22,7 +25,10 @@
         "backgroundColor": "#0A0A0F"
       },
       "package": "com.remi.app",
-      "newArchEnabled": false
+      "newArchEnabled": false,
+      "permissions": [
+        "android.permission.RECORD_AUDIO"
+      ]
     },
     "web": {
       "bundler": "metro",
@@ -30,7 +36,8 @@
     },
     "plugins": [
       "expo-router",
-      "expo-font"
+      "expo-font",
+      "expo-av"
     ],
     "experiments": {
       "typedRoutes": true

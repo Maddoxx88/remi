@@ -4,19 +4,14 @@ import { Task } from '../services/api';
 import { Colors, Fonts, Spacing, Radius } from '../services/theme';
 
 const PRIORITY_CONFIG = {
-  high: { color: Colors.high, bg: Colors.highSoft, label: 'High', icon: 'arrow-up' as const },
-  medium: { color: Colors.medium, bg: Colors.mediumSoft, label: 'Med', icon: 'remove' as const },
-  low: { color: Colors.low, bg: Colors.lowSoft, label: 'Low', icon: 'arrow-down' as const },
+  high:   { color: '#C03030', bg: '#FFD0D0', label: 'High',   icon: 'arrow-up' as const },
+  medium: { color: '#8B5E00', bg: '#FFE9B0', label: 'Medium', icon: 'remove' as const },
+  low:    { color: '#1A7A5E', bg: Colors.teal, label: 'Low',  icon: 'arrow-down' as const },
 };
 
 const CATEGORY_ICONS: Record<Task['category'], string> = {
-  work: '💼',
-  personal: '🏠',
-  health: '💚',
-  finance: '💰',
-  creative: '🎨',
-  social: '👥',
-  admin: '📋',
+  work: '💼', personal: '🏠', health: '💚',
+  finance: '💰', creative: '🎨', social: '👥', admin: '📋',
 };
 
 function formatMinutes(mins: number): string {
@@ -26,35 +21,26 @@ function formatMinutes(mins: number): string {
   return m > 0 ? `${h}h ${m}m` : `${h}h`;
 }
 
-interface Props {
-  task: Task;
-}
-
-export default function TaskCard({ task }: Props) {
+export default function TaskCard({ task }: { task: Task }) {
   const priority = PRIORITY_CONFIG[task.priority];
-  const categoryEmoji = CATEGORY_ICONS[task.category];
 
   return (
     <View style={styles.card}>
       <View style={styles.left}>
-        <Text style={styles.categoryEmoji}>{categoryEmoji}</Text>
+        <Text style={styles.emoji}>{CATEGORY_ICONS[task.category]}</Text>
       </View>
-
       <View style={styles.body}>
         <Text style={styles.title}>{task.title}</Text>
         {task.notes && <Text style={styles.notes}>{task.notes}</Text>}
-
         <View style={styles.meta}>
           <View style={[styles.priorityBadge, { backgroundColor: priority.bg }]}>
             <Ionicons name={priority.icon} size={10} color={priority.color} />
             <Text style={[styles.priorityText, { color: priority.color }]}>{priority.label}</Text>
           </View>
-
           <View style={styles.timeRow}>
             <Ionicons name="time-outline" size={11} color={Colors.textDim} />
             <Text style={styles.timeText}>{formatMinutes(task.estimatedMinutes)}</Text>
           </View>
-
           <Text style={styles.category}>{task.category}</Text>
         </View>
       </View>
@@ -66,7 +52,7 @@ const styles = StyleSheet.create({
   card: {
     flexDirection: 'row' as const,
     backgroundColor: Colors.bgCard,
-    borderRadius: Radius.md,
+    borderRadius: Radius.lg,
     padding: Spacing.md,
     marginBottom: Spacing.sm,
     borderWidth: 1,
@@ -74,15 +60,9 @@ const styles = StyleSheet.create({
     gap: Spacing.md,
     alignItems: 'flex-start' as const,
   },
-  left: {
-    paddingTop: 2,
-  },
-  categoryEmoji: {
-    fontSize: 18,
-  },
-  body: {
-    flex: 1,
-  },
+  left: { paddingTop: 2 },
+  emoji: { fontSize: 18 },
+  body: { flex: 1 },
   title: {
     fontFamily: Fonts.body,
     fontSize: 15,

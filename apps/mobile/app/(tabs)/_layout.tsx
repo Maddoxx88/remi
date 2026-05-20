@@ -3,10 +3,10 @@ import { View, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors, Fonts } from '../../services/theme';
 
-function TabIcon({ name, color, focused }: { name: any; color: string; focused: boolean }) {
+function TabIcon({ name, focused }: { name: any; focused: boolean }) {
   return (
     <View style={[styles.iconWrap, focused && styles.iconActive]}>
-      <Ionicons name={name} size={22} color={color} />
+      <Ionicons name={name} size={20} color={focused ? Colors.text : Colors.textDim} />
     </View>
   );
 }
@@ -17,7 +17,7 @@ export default function TabLayout() {
       screenOptions={{
         headerShown: false,
         tabBarStyle: styles.tabBar,
-        tabBarActiveTintColor: Colors.accent,
+        tabBarActiveTintColor: Colors.text,
         tabBarInactiveTintColor: Colors.textDim,
         tabBarLabelStyle: styles.tabLabel,
       }}
@@ -26,8 +26,8 @@ export default function TabLayout() {
         name="index"
         options={{
           title: 'Dump',
-          tabBarIcon: ({ color, focused }) => (
-            <TabIcon name={focused ? 'flash' : 'flash-outline'} color={color} focused={focused} />
+          tabBarIcon: ({ focused }) => (
+            <TabIcon name={focused ? 'flash' : 'flash-outline'} focused={focused} />
           ),
         }}
       />
@@ -35,8 +35,8 @@ export default function TabLayout() {
         name="history"
         options={{
           title: 'History',
-          tabBarIcon: ({ color, focused }) => (
-            <TabIcon name={focused ? 'time' : 'time-outline'} color={color} focused={focused} />
+          tabBarIcon: ({ focused }) => (
+            <TabIcon name={focused ? 'time' : 'time-outline'} focused={focused} />
           ),
         }}
       />
@@ -56,7 +56,7 @@ const styles = StyleSheet.create({
   tabLabel: {
     fontFamily: Fonts.body,
     fontSize: 11,
-    letterSpacing: 0.5,
+    letterSpacing: 0.3,
   },
   iconWrap: {
     width: 40,
@@ -66,6 +66,6 @@ const styles = StyleSheet.create({
     borderRadius: 10,
   },
   iconActive: {
-    backgroundColor: Colors.accentSoft,
+    backgroundColor: Colors.accent,
   },
 });

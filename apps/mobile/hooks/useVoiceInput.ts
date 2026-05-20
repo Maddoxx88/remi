@@ -1,13 +1,14 @@
 import { useState, useRef, useCallback } from 'react';
 import { Audio } from 'expo-av';
-import { Alert, Platform } from 'react-native';
+import { Alert } from 'react-native';
+import { API_BASE_URL } from '../services/config';
 
 export type VoiceState = 'idle' | 'requesting' | 'recording' | 'processing' | 'error';
 
 interface UseVoiceInputReturn {
   voiceState: VoiceState;
   startRecording: () => Promise<void>;
-  stopRecording: () => Promise<string | null>;
+  stopAndTranscribe: () => Promise<string | null>;
   cancelRecording: () => Promise<void>;
   recordingDuration: number;
 }
@@ -33,7 +34,7 @@ export function useVoiceInput(): UseVoiceInputReturn {
       if (!granted) {
         Alert.alert(
           'Microphone Permission',
-          'Please enable microphone access in your device settings to use voice input.',
+          'Please enable microphone access in settings to use voice input.',
         );
         setVoiceState('idle');
         return;
@@ -63,7 +64,7 @@ export function useVoiceInput(): UseVoiceInputReturn {
     }
   }, []);
 
-  const stopRecording = useCallback(async (): Promise<string | null> => {
+  const stopAndTranscribe = useCallback(async (): Promise<string | null> => {
     if (!recordingRef.current) return null;
 
     clearTimer();
@@ -76,13 +77,44 @@ export function useVoiceInput(): UseVoiceInputReturn {
       const uri = recordingRef.current.getURI();
       recordingRef.current = null;
       setRecordingDuration(0);
+
+      if (!uri) {
+        setVoiceState('idle');
+        return null;
+      }
+
+      // Read audio as base64 using fetch
+      const audioFetch = await fetch(uri);
+      const audioBlob = await audioFetch.blob();
+      const base64Audio = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => {
+          const result = reader.result as string;
+          resolve(result.split(',')[1]); // strip data:...;base64, prefix
+        };
+        reader.onerror = reject;
+        reader.readAsDataURL(audioBlob);
+      });
+
+      // Send to backend for Whisper transcription
+      const response = await fetch(`${API_BASE_URL}/api/transcribe`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ audio: base64Audio, mimeType: 'audio/m4a' }),
+      });
+
+      const data = await response.json();
       setVoiceState('idle');
 
-      // Return the URI — in production this would be sent to a transcription API
-      // For now we return a placeholder to show the flow works
-      return uri;
+      if (!response.ok || !data.text) {
+        Alert.alert('Transcription failed', data.error || 'Could not transcribe audio.');
+        return null;
+      }
+
+      return data.text;
+
     } catch (err) {
-      console.error('Failed to stop recording:', err);
+      console.error('Failed to transcribe:', err);
       setVoiceState('error');
       setTimeout(() => setVoiceState('idle'), 2000);
       return null;
@@ -104,7 +136,7 @@ export function useVoiceInput(): UseVoiceInputReturn {
   return {
     voiceState,
     startRecording,
-    stopRecording,
+    stopAndTranscribe,
     cancelRecording,
     recordingDuration,
   };

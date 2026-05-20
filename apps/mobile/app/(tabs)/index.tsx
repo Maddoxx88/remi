@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import {
   View,
   Text,
@@ -42,6 +42,7 @@ export default function DumpScreen() {
   const inputRef = useRef<TextInput>(null);
   const router = useRouter();
   const pulseAnim = useRef(new Animated.Value(1)).current;
+  const pulseLoopRef = useRef<Animated.CompositeAnimation | null>(null);
 
   const { voiceState, startRecording, stopAndTranscribe, cancelRecording, recordingDuration } = useVoiceInput();
 
@@ -49,26 +50,35 @@ export default function DumpScreen() {
   const isReady = text.trim().length > 10;
   const isRecording = voiceState === 'recording';
 
-  const startPulse = () => {
-    Animated.loop(
+  useEffect(() => {
+    if (voiceState !== 'recording') {
+      pulseLoopRef.current?.stop();
+      pulseLoopRef.current = null;
+      pulseAnim.stopAnimation();
+      pulseAnim.setValue(1);
+      return;
+    }
+
+    const loop = Animated.loop(
       Animated.sequence([
         Animated.timing(pulseAnim, { toValue: 1.15, duration: 700, useNativeDriver: true }),
         Animated.timing(pulseAnim, { toValue: 1, duration: 700, useNativeDriver: true }),
-      ])
-    ).start();
-  };
+      ]),
+    );
+    pulseLoopRef.current = loop;
+    loop.start();
 
-  const stopPulse = () => {
-    pulseAnim.stopAnimation();
-    Animated.timing(pulseAnim, { toValue: 1, duration: 200, useNativeDriver: true }).start();
-  };
+    return () => {
+      loop.stop();
+      pulseLoopRef.current = null;
+      pulseAnim.setValue(1);
+    };
+  }, [voiceState, pulseAnim]);
 
   async function handleVoicePress() {
     if (voiceState === 'idle') {
       await startRecording();
-      startPulse();
     } else if (voiceState === 'recording') {
-      stopPulse();
       const transcript = await stopAndTranscribe();
       if (transcript) {
         setText(prev => prev ? prev + ' ' + transcript : transcript);

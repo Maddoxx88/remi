@@ -43,7 +43,7 @@ export default function DumpScreen() {
   const router = useRouter();
   const pulseAnim = useRef(new Animated.Value(1)).current;
 
-  const { voiceState, startRecording, stopRecording, cancelRecording, recordingDuration } = useVoiceInput();
+  const { voiceState, startRecording, stopAndTranscribe, cancelRecording, recordingDuration } = useVoiceInput();
 
   const charCount = text.length;
   const isReady = text.trim().length > 10;
@@ -70,15 +70,9 @@ export default function DumpScreen() {
       startPulse();
     } else if (voiceState === 'recording') {
       stopPulse();
-      const uri = await stopRecording();
-      if (uri) {
-        // In production: send uri to Whisper/Deepgram for transcription
-        // For now append a placeholder so the UI flow is demonstrable
-        setText(prev =>
-          prev
-            ? prev + '\n[Voice note recorded — transcription API needed]'
-            : '[Voice note recorded — transcription API needed]'
-        );
+      const transcript = await stopAndTranscribe();
+      if (transcript) {
+        setText(prev => prev ? prev + ' ' + transcript : transcript);
       }
     }
   }

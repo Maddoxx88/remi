@@ -1,16 +1,22 @@
 export const Colors = {
   // Backgrounds
-  bg: '#F5F7EE',           // warm off-white (like the reference)
+  bg: '#F5F7F1',           // warm off-white (reference)
   bgCard: '#FFFFFF',
   bgElevated: '#ECEEE5',
   border: '#E0E3D8',
   borderLight: '#ECEEE5',
+  sage: '#E1E8D6',         // discover cards, secondary panels
+  sageDark: '#D4DCC8',
 
   // Accents
-  accent: '#C1F645',        // lime green
-  accentSoft: '#C1F64520',
-  accentGlow: '#C1F64540',
+  accent: '#C6F432',        // lime green (reference)
+  accentSoft: '#C6F43220',
+  accentGlow: '#C6F43240',
   accentDark: '#8FB832',    // darker lime for text on light bg
+  nameAccent: '#3D8B9E',    // teal for greeting name
+
+  heroBlue: '#7EB4E8',
+  heroBlueLight: '#B8D9F5',
 
   teal: '#B0F1DC',
   tealSoft: '#B0F1DC30',

@@ -8,6 +8,7 @@ type MdiName = keyof typeof MaterialCommunityIcons.glyphMap;
 
 const TABS: Record<string, { label: string; icon: MdiName; iconActive: MdiName }> = {
   index: { label: 'Home', icon: 'home-outline', iconActive: 'home' },
+  insights: { label: 'Insights', icon: 'chart-line-variant', iconActive: 'chart-line' },
   history: { label: 'History', icon: 'clock-outline', iconActive: 'clock' },
 };
 

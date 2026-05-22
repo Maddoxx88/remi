@@ -34,6 +34,9 @@ export const Colors = {
   textMuted: '#6B6F5E',
   textDim: '#A8AD9A',
 
+  tabActive: '#6AAF1A',
+  tabInactive: '#9CA39A',
+
   // Dark card (like the "Start a Chat" dark card in reference)
   darkCard: '#2E2E2E',
   darkCardText: '#FFFFFF',

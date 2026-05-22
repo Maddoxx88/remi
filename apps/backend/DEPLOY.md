@@ -29,7 +29,7 @@ Expect JSON with `"status":"ok"`.
    | Field | Value |
    |-------|--------|
    | Root Directory | `apps/backend` |
-   | Build Command | `npm install && npm run build` |
+   | Build Command | `npm install --include=dev && npm run build` |
    | Start Command | `npm start` |
    | Health Check Path | `/health` |
 

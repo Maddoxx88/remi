@@ -1,6 +1,10 @@
 # Remi
 
+[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
+
 **Remi** is an AI thought partner: dump messy thoughts (text or voice), and get structured tasks, mood, focus, and insights. The mobile app talks to a small Express backend powered by Claude (and Whisper for transcription).
+
+**Production API:** [https://remi-oa70.onrender.com](https://remi-oa70.onrender.com/health)
 
 ## What's in the repo
 
@@ -8,6 +12,7 @@
 |------|-------------|
 | `apps/mobile` | Expo (React Native) app — dump screen, voice, history, insights |
 | `apps/backend` | Express API — `/api/process`, `/api/transcribe`, rate limiting |
+| `docs/screenshots` | App screenshots for this README |
 
 ## Features
 
@@ -16,7 +21,54 @@
 - **Voice input** — record → Whisper transcription → edit → organize
 - **History** — local storage of past dumps
 - **Insights** — 7-day mood trend, task categories, stats, and “your patterns”
+- **Onboarding** — first-run walkthrough
 - **Dev fallback** — mock parser when `ANTHROPIC_API_KEY` is unset
+
+---
+
+## Download APK (Android)
+
+Install Remi on Android without the Play Store (sideload).
+
+### Option 1 — GitHub Releases (recommended)
+
+1. Open **[Releases](https://github.com/Maddoxx88/remi/releases)**.
+2. Download the latest **`Remi-*.apk`** asset.
+3. On your phone: enable **Install unknown apps** for your browser or Files app.
+4. Open the APK and install.
+
+> **Maintainers:** After `eas build -p android --profile preview`, upload the `.apk` to a new GitHub Release (tag e.g. `v1.0.0`) so the link above works for users.
+
+### Option 2 — Expo EAS build
+
+If you built the app yourself:
+
+1. Run `eas build -p android --profile preview` from `apps/mobile`.
+2. Open [expo.dev](https://expo.dev) → your project → **Builds** → download the APK.
+
+### Requirements
+
+- Android 8+ recommended
+- Internet required (backend on Render)
+- Microphone permission for voice dumps
+
+---
+
+## Screenshots
+
+Add PNGs under [`docs/screenshots/`](docs/screenshots/) to replace placeholders below. See [`docs/screenshots/README.md`](docs/screenshots/README.md) for suggested filenames.
+
+| Home | Chat dump | Results |
+|:----:|:---------:|:-------:|
+| ![Home screen](docs/screenshots/home.png) | ![Chat](docs/screenshots/chat.png) | ![Results](docs/screenshots/results.png) |
+
+| Insights | History |
+|:--------:|:-------:|
+| ![Insights](docs/screenshots/insights.png) | ![History](docs/screenshots/history.png) |
+
+*Until those files are added, images may not render on GitHub. Capture from emulator or device and commit `home.png`, `chat.png`, `results.png`, `insights.png`, `history.png`.*
+
+---
 
 ## Prerequisites
 
@@ -66,103 +118,46 @@ npx expo start
 - In dev, the app picks the API host from the Metro debugger (same machine as Expo). Android emulator uses `10.0.2.2:3001`; iOS simulator uses `localhost:3001`.
 - **Physical device**: phone and laptop must be on the same Wi‑Fi; backend must listen on `0.0.0.0` (default for `npm run dev`).
 
-### 3. Production API URL (before store builds)
+### 3. Production API URL
 
-Update the non-dev base URL in `apps/mobile/services/config.ts`:
+Release builds use `EXPO_PUBLIC_API_URL` (see `apps/mobile/eas.json`) or the fallback in `apps/mobile/services/config.ts` (`https://remi-oa70.onrender.com`).
 
-```ts
-export const API_BASE_URL = __DEV__
-  ? `http://${getDevApiHost()}:3001`
-  : 'https://api.yourdomain.com';   // ← your deployed backend
-```
-
-**Fastest deploy:** [Render](https://render.com) using the repo’s `render.yaml` — step-by-step in [`apps/backend/DEPLOY.md`](apps/backend/DEPLOY.md). Then set `EXPO_PUBLIC_API_URL` to your `https://….onrender.com` URL before an EAS build.
+**Deploy backend:** [Render](https://render.com) using the repo’s `render.yaml` — details in [`apps/backend/DEPLOY.md`](apps/backend/DEPLOY.md).
 
 ---
 
-## Generate an Android APK
-
-Expo SDK 54 uses **EAS Build** for reliable release binaries. You build in the cloud (no local Android Studio required for the first APK).
-
-### One-time setup
+## Build an Android APK
 
 ```bash
 npm install -g eas-cli
 eas login
 cd apps/mobile
-eas build:configure
-```
-
-This creates `eas.json`. For a **test APK** (easy to sideload), use a profile like:
-
-```json
-{
-  "cli": { "version": ">= 16.0.0" },
-  "build": {
-    "preview": {
-      "distribution": "internal",
-      "android": {
-        "buildType": "apk"
-      }
-    },
-    "production": {
-      "android": {
-        "buildType": "app-bundle"
-      }
-    }
-  }
-}
-```
-
-### Build the APK
-
-```bash
-cd apps/mobile
+eas build:configure   # once — use buildType "apk" under preview
 eas build -p android --profile preview
 ```
 
-- Wait for the build on [expo.dev](https://expo.dev) → your project → **Builds**.
-- Download the `.apk` when finished.
-- Install on a device: enable **Install unknown apps**, transfer the APK, open it.
+Download from [expo.dev](https://expo.dev) → **Builds**, then upload to [GitHub Releases](https://github.com/Maddoxx88/remi/releases) for public download.
 
-### Local APK (advanced)
+Full build notes (local Gradle, Play Store AAB) are in earlier sections of this doc or [`apps/backend/DEPLOY.md`](apps/backend/DEPLOY.md).
 
-If you need a fully local build:
+### App icons
 
 ```bash
 cd apps/mobile
-npx expo prebuild --platform android
-cd android
-./gradlew assembleRelease
+# Replace assets/remi-logo.png if needed, then:
+npm run generate-icons
 ```
-
-Output: `android/app/build/outputs/apk/release/app-release.apk`. You must configure signing (keystore) for installs and Play Store. EAS is simpler for most teams.
 
 ---
 
 ## Publishing checklist
 
-### Before you ship
-
-- [ ] Set production `API_BASE_URL` in `apps/mobile/services/config.ts` (or move to `app.config` / env via `expo-constants`)
-- [ ] Deploy backend with HTTPS, `ANTHROPIC_API_KEY`, `OPENAI_API_KEY`, and secrets not in git
-- [ ] Bump `version` in `apps/mobile/app.json` (and `versionCode` / build numbers via EAS or `app.json` android section)
-- [ ] Replace placeholder icons/splash if needed (`apps/mobile/assets/`)
-- [ ] Test voice, organize, history, and insights on a **release** build (not only Expo Go)
-
-### Backend in production
-
-- Run `npm run build && npm start` in `apps/backend`, or use the platform’s Node start command.
-- Set: `ANTHROPIC_API_KEY`, `OPENAI_API_KEY`, `PORT`, optional rate limit env vars (`RATE_LIMIT_*`), `TRUST_PROXY=1` behind nginx/load balancer.
-- Never commit `.env`; rotate keys if exposed.
-
----
-
-### Regenerate after logo changes
-
-`cd apps/mobile`
-# Replace assets/remi-logo.png, then:
-`npm run generate-icons`
+- [ ] Production API URL set (`EXPO_PUBLIC_API_URL` / Render deploy)
+- [ ] Backend secrets on host only (never in git)
+- [ ] Bump `version` in `apps/mobile/app.json`
+- [ ] Screenshots in `docs/screenshots/` for README / store listing
+- [ ] APK attached to GitHub Release
+- [ ] Test voice, organize, history, insights on a **release** build
 
 ---
 
@@ -182,13 +177,18 @@ Rate limits apply per IP on `/api/*` (see `apps/backend/src/middleware/rateLimit
 
 | Issue | What to try |
 |-------|-------------|
-| Organize fails on device | Same Wi‑Fi as dev machine; check backend URL in Metro logs; use inline error on dump screen |
-| 401 from Anthropic | Valid `ANTHROPIC_API_KEY` in backend `.env`; restart `npm run dev` |
-| Voice fails | `OPENAI_API_KEY` set; microphone permission granted |
-| Android emulator can’t reach API | Backend on host; app uses `10.0.2.2:3001` in dev |
+| Organize fails on device | Check `https://remi-oa70.onrender.com/health`; cold start on free Render can take ~30s |
+| 401 from Anthropic | Valid `ANTHROPIC_API_KEY` on Render; redeploy |
+| Voice fails | `OPENAI_API_KEY` on Render; microphone permission |
+| Onboarding skipped | Completed once — uninstall app or clear `remi_onboarding_complete` in storage |
+| Android emulator can’t reach API | Backend on host; dev uses `10.0.2.2:3001` |
 
 ---
 
 ## License
 
-Private / hackathon project — add a license file if you open-source.
+This project is licensed under the **[MIT License](LICENSE)**.
+
+You may use, copy, modify, and distribute the code with attribution. The software is provided “as is”, without warranty.
+
+Copyright © 2026 Sunit Shirke

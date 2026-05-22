@@ -60,9 +60,9 @@ If you built the app yourself:
 |:----:|:---------:|:-------:|
 | ![Home screen](docs/screenshots/home.png) | ![Chat](docs/screenshots/chat.png) | ![Results](docs/screenshots/results.png) |
 
-| Insights | History |
-|:--------:|:-------:|
-| ![Insights](docs/screenshots/insights.png) | ![History](docs/screenshots/history.png) |
+| Insights | History | Voice Input |
+|:--------:|:-------:|:-------:|
+| ![Insights](docs/screenshots/insights.png) | ![History](docs/screenshots/history.png) | ![Voice Input](docs/screenshots/voice.png) |
 
 ---
 

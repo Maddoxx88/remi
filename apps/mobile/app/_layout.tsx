@@ -2,6 +2,12 @@ import { useEffect, useState } from 'react';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useFonts } from 'expo-font';
+import {
+  PlusJakartaSans_400Regular,
+  PlusJakartaSans_500Medium,
+  PlusJakartaSans_600SemiBold,
+  PlusJakartaSans_700Bold,
+} from '@expo-google-fonts/plus-jakarta-sans';
 import * as SplashScreen from 'expo-splash-screen';
 import { Colors } from '../services/theme';
 import { hasCompletedOnboarding } from './onboarding';
@@ -17,6 +23,10 @@ export default function RootLayout() {
     'DMSans-Medium': require('../assets/fonts/DMSans-Medium.ttf'),
     'DMSans-SemiBold': require('../assets/fonts/DMSans-SemiBold.ttf'),
     SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
+    PlusJakartaSans_400Regular,
+    PlusJakartaSans_500Medium,
+    PlusJakartaSans_600SemiBold,
+    PlusJakartaSans_700Bold,
   });
 
   useEffect(() => {

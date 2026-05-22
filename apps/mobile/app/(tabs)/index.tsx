@@ -19,7 +19,9 @@ import { processDump } from '../../services/api';
 import { API_BASE_URL } from '../../services/config';
 import { saveToHistory, getHistory, DumpEntry } from '../../services/storage';
 import { consumePendingTranscript } from '../../services/voiceSession';
-import { Colors, Fonts, Spacing, Radius } from '../../services/theme';
+import RemiLogo from '../../components/RemiLogo';
+import { Colors, Spacing, Radius } from '../../services/theme';
+import { HomeFonts } from '../../services/homeTypography';
 
 const PROMPTS = [
   "What's on your mind today?",
@@ -53,16 +55,6 @@ const RECENT_ICONS = [
   'sparkles-outline',
   'document-text-outline',
 ] as const;
-
-function LogoMark() {
-  return (
-    <View style={styles.logoMark}>
-      <View style={[styles.stripe, { transform: [{ rotate: '-35deg' }] }]} />
-      <View style={[styles.stripe, { transform: [{ rotate: '-35deg' }], left: 10 }]} />
-      <View style={[styles.stripe, { transform: [{ rotate: '-35deg' }], left: 20 }]} />
-    </View>
-  );
-}
 
 type InputMode = null | 'chat';
 
@@ -185,7 +177,10 @@ export default function DumpScreen() {
         >
           {/* Header */}
           <View style={styles.header}>
-            <LogoMark />
+            <View style={styles.logoRow}>
+              <RemiLogo size={36} />
+              <Text style={styles.logoWordmark}>remi</Text>
+            </View>
             <TouchableOpacity
               style={styles.menuBtn}
               onPress={() => router.push('/(tabs)/history')}
@@ -396,22 +391,16 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.lg,
     marginTop: Spacing.sm,
   },
-  logoMark: {
-    width: 40,
-    height: 40,
-    borderRadius: 12,
-    backgroundColor: Colors.accent,
-    overflow: 'hidden',
-    position: 'relative',
+  logoRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
   },
-  stripe: {
-    position: 'absolute',
-    width: 4,
-    height: 56,
-    backgroundColor: Colors.text,
-    top: -8,
-    left: 6,
-    borderRadius: 2,
+  logoWordmark: {
+    fontFamily: HomeFonts.bold,
+    fontSize: 22,
+    color: Colors.text,
+    letterSpacing: -0.5,
   },
   menuBtn: {
     width: 44,
@@ -427,19 +416,20 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.lg,
   },
   greeting: {
-    fontFamily: Fonts.heading,
+    fontFamily: HomeFonts.bold,
     fontSize: 32,
     color: Colors.text,
     marginBottom: 4,
+    letterSpacing: -0.8,
   },
   greetingName: {
     color: Colors.nameAccent,
   },
   prompt: {
-    fontFamily: Fonts.body,
+    fontFamily: HomeFonts.regular,
     fontSize: 16,
     color: Colors.textMuted,
-    lineHeight: 22,
+    lineHeight: 24,
   },
   modeGrid: {
     flexDirection: 'row',
@@ -457,9 +447,8 @@ const styles = StyleSheet.create({
     borderColor: 'rgba(255,255,255,0.22)',
   },
   modeBtnLabel: {
-    fontFamily: Fonts.body,
+    fontFamily: HomeFonts.medium,
     fontSize: 14,
-    fontWeight: '500',
     color: Colors.darkCardText,
     flex: 1,
   },
@@ -473,7 +462,7 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.sm,
   },
   chatBackText: {
-    fontFamily: Fonts.body,
+    fontFamily: HomeFonts.medium,
     fontSize: 14,
     color: Colors.textMuted,
   },
@@ -487,7 +476,7 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.sm,
   },
   chatInput: {
-    fontFamily: Fonts.body,
+    fontFamily: HomeFonts.regular,
     fontSize: 16,
     color: Colors.text,
     lineHeight: 26,
@@ -500,7 +489,7 @@ const styles = StyleSheet.create({
     gap: Spacing.md,
   },
   charHint: {
-    fontFamily: Fonts.mono,
+    fontFamily: HomeFonts.medium,
     fontSize: 11,
     color: Colors.textDim,
     flex: 1,
@@ -518,20 +507,19 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.bgElevated,
   },
   organizeBtnText: {
-    fontFamily: Fonts.body,
+    fontFamily: HomeFonts.semiBold,
     fontSize: 15,
-    fontWeight: '600',
     color: Colors.text,
   },
   organizeBtnTextDisabled: {
     color: Colors.textDim,
   },
   sectionTitle: {
-    fontFamily: Fonts.body,
+    fontFamily: HomeFonts.semiBold,
     fontSize: 18,
-    fontWeight: '600',
     color: Colors.text,
     marginBottom: Spacing.md,
+    letterSpacing: -0.3,
   },
   discoverScroll: {
     gap: Spacing.sm,
@@ -545,9 +533,8 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
   },
   discoverLabel: {
-    fontFamily: Fonts.body,
+    fontFamily: HomeFonts.medium,
     fontSize: 14,
-    fontWeight: '500',
     color: Colors.text,
   },
   dots: {
@@ -586,7 +573,7 @@ const styles = StyleSheet.create({
   },
   searchInput: {
     flex: 1,
-    fontFamily: Fonts.body,
+    fontFamily: HomeFonts.regular,
     fontSize: 15,
     color: Colors.text,
     padding: 0,
@@ -600,13 +587,13 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   recentTitle: {
-    fontFamily: Fonts.body,
+    fontFamily: HomeFonts.medium,
     fontSize: 14,
     color: Colors.textDim,
     marginBottom: Spacing.md,
   },
   recentEmpty: {
-    fontFamily: Fonts.body,
+    fontFamily: HomeFonts.regular,
     fontSize: 14,
     color: Colors.textDim,
     lineHeight: 20,
@@ -627,13 +614,13 @@ const styles = StyleSheet.create({
   },
   recentText: {
     flex: 1,
-    fontFamily: Fonts.body,
+    fontFamily: HomeFonts.regular,
     fontSize: 14,
     color: Colors.text,
     lineHeight: 20,
   },
   reassurance: {
-    fontFamily: Fonts.body,
+    fontFamily: HomeFonts.regular,
     fontSize: 12,
     color: Colors.textDim,
     textAlign: 'center',

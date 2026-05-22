@@ -9,7 +9,6 @@ import {
   KeyboardAvoidingView,
   Platform,
   ActivityIndicator,
-  Alert,
   Dimensions,
 } from 'react-native';
 import { useRouter, useFocusEffect } from 'expo-router';
@@ -21,6 +20,7 @@ import { saveToHistory, getHistory, DumpEntry } from '../../services/storage';
 import { buildPreviousContext } from '../../services/dumpContext';
 import { consumePendingTranscript } from '../../services/voiceSession';
 import RemiLogo from '../../components/RemiLogo';
+import ProcessErrorCard from '../../components/ProcessErrorCard';
 import { Colors, Fonts, Spacing, Radius } from '../../services/theme';
 
 const PROMPTS = [
@@ -89,6 +89,7 @@ export default function DumpScreen() {
   const [inputMode, setInputMode] = useState<InputMode>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [history, setHistory] = useState<DumpEntry[]>([]);
+  const [processError, setProcessError] = useState<string | null>(null);
   const [discoverIndex, setDiscoverIndex] = useState(0);
   const [promptIndex] = useState(() => Math.floor(Math.random() * PROMPTS.length));
   const inputRef = useRef<TextInput>(null);
@@ -115,6 +116,7 @@ export default function DumpScreen() {
 
   function closeChat() {
     setInputMode(null);
+    setProcessError(null);
     inputRef.current?.blur();
   }
 
@@ -138,6 +140,7 @@ export default function DumpScreen() {
 
   async function handleProcess() {
     if (!isReady || loading) return;
+    setProcessError(null);
     setLoading(true);
     try {
       const previousContext = buildPreviousContext(history, 3);
@@ -150,7 +153,7 @@ export default function DumpScreen() {
       const message =
         err instanceof Error ? err.message : 'Please try again.';
       if (__DEV__) console.warn('[process]', API_BASE_URL, message);
-      Alert.alert('Something went wrong', message);
+      setProcessError(message);
     } finally {
       setLoading(false);
     }
@@ -231,7 +234,10 @@ export default function DumpScreen() {
                   ref={inputRef}
                   style={styles.chatInput}
                   value={text}
-                  onChangeText={t => setText(t.slice(0, CHAR_LIMIT))}
+                  onChangeText={t => {
+                    setText(t.slice(0, CHAR_LIMIT));
+                    if (processError) setProcessError(null);
+                  }}
                   placeholder="Dump your thoughts — tasks, worries, ideas, anything..."
                   placeholderTextColor={Colors.textDim}
                   multiline
@@ -266,6 +272,13 @@ export default function DumpScreen() {
                   )}
                 </TouchableOpacity>
               </View>
+
+              {processError ? (
+                <ProcessErrorCard
+                  message={processError}
+                  onDismiss={() => setProcessError(null)}
+                />
+              ) : null}
             </View>
           )}
 

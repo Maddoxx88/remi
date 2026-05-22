@@ -1,6 +1,11 @@
 import { Router, Request, Response } from 'express';
 import Anthropic from '@anthropic-ai/sdk';
 import { enrichProcessedDump, PROCESS_SYSTEM_PROMPT_EXTENSION } from '../lib/taskMeta';
+import {
+  buildProcessUserMessage,
+  PREVIOUS_CONTEXT_PROMPT,
+  sanitizePreviousContext,
+} from '../lib/previousContext';
 
 const router = Router();
 
@@ -52,11 +57,12 @@ Rules:
 - estimatedMinutes should be realistic (5–240)
 - Maximum 6 tasks, prioritize ruthlessly
 - insights should feel personal and perceptive, not generic
-- If the dump is very short, still do your best`;
+- If the dump is very short, still do your best
+${PREVIOUS_CONTEXT_PROMPT}`;
 
 router.post('/', async (req: Request, res: Response) => {
   try {
-    const { text } = req.body;
+    const { text, previousContext: rawPreviousContext } = req.body;
 
     if (!text || typeof text !== 'string' || text.trim().length === 0) {
       return res.status(400).json({ error: 'Text is required' });
@@ -67,9 +73,10 @@ router.post('/', async (req: Request, res: Response) => {
     }
 
     const today = new Date();
-    const todayISO = today.toISOString().slice(0, 10);
-
-    console.log(`[process] ${text.trim().length} chars → Anthropic`);
+    const previousContext = sanitizePreviousContext(rawPreviousContext);
+    console.log(
+      `[process] ${text.trim().length} chars, ${previousContext.length} prior dump(s) → Anthropic`,
+    );
 
     const model = process.env.ANTHROPIC_MODEL?.trim() || 'claude-sonnet-4-6';
 
@@ -80,7 +87,7 @@ router.post('/', async (req: Request, res: Response) => {
       messages: [
         {
           role: 'user',
-          content: `Today's date: ${todayISO} (${today.toLocaleDateString('en-US', { weekday: 'long' })})\n\nHere's my brain dump:\n\n${text.trim()}`,
+          content: buildProcessUserMessage(text.trim(), today, previousContext),
         },
       ],
     });

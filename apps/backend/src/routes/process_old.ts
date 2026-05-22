@@ -1,11 +1,12 @@
 import { Router, Request, Response } from 'express';
 import { buildMockFromText } from '../lib/buildMockFromText';
+import { sanitizePreviousContext } from '../lib/previousContext';
 
 const router = Router();
 
 router.post('/', async (req: Request, res: Response) => {
   try {
-    const { text } = req.body;
+    const { text, previousContext: rawPreviousContext } = req.body;
 
     if (!text || typeof text !== 'string' || text.trim().length === 0) {
       return res.status(400).json({ error: 'Text is required' });
@@ -18,7 +19,8 @@ router.post('/', async (req: Request, res: Response) => {
     // Simulate a realistic API delay
     await new Promise(resolve => setTimeout(resolve, 1500));
 
-    const data = buildMockFromText(text.trim());
+    const previousContext = sanitizePreviousContext(rawPreviousContext);
+    const data = buildMockFromText(text.trim(), previousContext);
 
     return res.json({
       success: true,

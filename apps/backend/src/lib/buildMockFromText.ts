@@ -5,9 +5,13 @@ import {
   parseDueFromText,
   ProcessedDumpPayload,
 } from './taskMeta';
+import type { PreviousDumpItem } from './previousContext';
 
 /** Build a plausible mock dump from user text for dev without an API key. */
-export function buildMockFromText(text: string): ProcessedDumpPayload {
+export function buildMockFromText(
+  text: string,
+  previousContext: PreviousDumpItem[] = [],
+): ProcessedDumpPayload {
   const trimmed = text.trim();
   const due = parseDueFromText(trimmed);
   const { actionType, actionVerb } = inferActionType(trimmed);
@@ -82,13 +86,44 @@ export function buildMockFromText(text: string): ProcessedDumpPayload {
         : 'It surfaced most clearly in your dump.',
     },
     tasks,
-    insights: [
-      'Remi inferred due dates, projects, and action types from how you phrased things.',
-      project
-        ? `Tasks cluster around "${project}" — consider batching related actions.`
-        : 'Try naming projects in your dump for sharper grouping.',
-    ],
+    insights: buildInsights(trimmed, project, previousContext),
   };
 
   return enrichProcessedDump(payload, trimmed);
+}
+
+function buildInsights(
+  text: string,
+  project: string | null,
+  previousContext: PreviousDumpItem[],
+): string[] {
+  const insights: string[] = [];
+
+  if (previousContext.length > 0) {
+    const themes = previousContext.map(c => c.summary.toLowerCase()).join(' ');
+    const repeatedStress =
+      /\b(stress|deadline|overwhelm|worry|anxious)\b/i.test(themes) &&
+      /\b(stress|deadline|overwhelm|worry|anxious)\b/i.test(text);
+
+    if (repeatedStress) {
+      insights.push(
+        `You've been carrying stress across your last few dumps (${previousContext[0].relativeLabel} through today) — the same worries keep surfacing, so they may deserve dedicated time this week.`,
+      );
+    } else {
+      const oldest = previousContext[previousContext.length - 1];
+      insights.push(
+        `Compared to ${oldest.relativeLabel} (${oldest.summary.slice(0, 60)}…), today's dump shows what's shifting on your mind — worth noticing the thread between them.`,
+      );
+    }
+  }
+
+  insights.push(
+    'Remi inferred due dates, projects, and action types from how you phrased things.',
+  );
+
+  if (project) {
+    insights.push(`Tasks cluster around "${project}" — consider batching related actions.`);
+  }
+
+  return insights.slice(0, 3);
 }

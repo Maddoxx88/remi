@@ -1,4 +1,5 @@
 import { API_BASE_URL } from './config';
+import type { PreviousDumpContext } from './dumpContext';
 
 export type ActionType =
   | 'email'
@@ -56,6 +57,8 @@ export interface ProcessResponse {
   processedAt: string;
 }
 
+export type { PreviousDumpContext } from './dumpContext';
+
 const PROCESS_TIMEOUT_MS = 90_000;
 
 async function parseErrorMessage(response: Response): Promise<string> {
@@ -69,7 +72,10 @@ async function parseErrorMessage(response: Response): Promise<string> {
   }
 }
 
-export async function processDump(text: string): Promise<ProcessResponse> {
+export async function processDump(
+  text: string,
+  previousContext: PreviousDumpContext[] = [],
+): Promise<ProcessResponse> {
   const trimmed = text.trim();
   if (!trimmed) {
     throw new Error('Please enter some text first.');
@@ -82,7 +88,10 @@ export async function processDump(text: string): Promise<ProcessResponse> {
     const response = await fetch(`${API_BASE_URL}/api/process`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ text: trimmed }),
+      body: JSON.stringify({
+        text: trimmed,
+        previousContext: previousContext.slice(0, 3),
+      }),
       signal: controller.signal,
     });
 

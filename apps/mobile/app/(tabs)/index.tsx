@@ -18,6 +18,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { processDump } from '../../services/api';
 import { API_BASE_URL } from '../../services/config';
 import { saveToHistory, getHistory, DumpEntry } from '../../services/storage';
+import { buildPreviousContext } from '../../services/dumpContext';
 import { consumePendingTranscript } from '../../services/voiceSession';
 import RemiLogo from '../../components/RemiLogo';
 import { Colors, Fonts, Spacing, Radius } from '../../services/theme';
@@ -139,7 +140,8 @@ export default function DumpScreen() {
     if (!isReady || loading) return;
     setLoading(true);
     try {
-      const response = await processDump(text);
+      const previousContext = buildPreviousContext(history, 3);
+      const response = await processDump(text, previousContext);
       const entry = await saveToHistory(text, response.data);
       setHistory(await getHistory());
       router.push({ pathname: '/result', params: { entryId: entry.id } });

@@ -1,53 +1,58 @@
 import { Router, Request, Response } from 'express';
+import Anthropic from '@anthropic-ai/sdk';
+import { enrichProcessedDump, PROCESS_SYSTEM_PROMPT_EXTENSION } from '../lib/taskMeta';
 
 const router = Router();
 
-const MOCK_RESPONSE = {
-  summary: "You're juggling a heavy workload with a looming deadline, some personal errands, and underlying stress about getting everything done.",
-  mood: "overwhelmed",
-  focusItem: {
-    title: "Finish the project report",
-    reason: "It has a hard deadline and unblocks everything else on your list."
+function getClient(): Anthropic {
+  const apiKey = process.env.ANTHROPIC_API_KEY?.trim();
+  if (!apiKey) {
+    throw new Error('ANTHROPIC_API_KEY is not set');
+  }
+  return new Anthropic({ apiKey });
+}
+
+const SYSTEM_PROMPT = `You are Remi, an AI thought partner. Your job is to take someone's raw, unfiltered brain dump — messy thoughts, worries, tasks, ideas — and transform it into a clean, structured, actionable output.
+
+You MUST respond with ONLY a valid JSON object, no markdown, no explanation, nothing else. The JSON must follow this exact structure:
+
+{
+  "summary": "1-2 sentence overview of what's on their mind",
+  "mood": "one of: focused | overwhelmed | anxious | energized | scattered | reflective | stressed | creative",
+  "focusItem": {
+    "title": "The single most important thing to do right now",
+    "reason": "Why this is the top priority in one sentence"
   },
-  tasks: [
+  "tasks": [
     {
-      id: "task-1",
-      title: "Finish project report",
-      category: "work",
-      priority: "high",
-      estimatedMinutes: 90,
-      notes: "Focus on this first — it's blocking everything else."
-    },
-    {
-      id: "task-2",
-      title: "Fix the app bug",
-      category: "work",
-      priority: "high",
-      estimatedMinutes: 45,
-      notes: null
-    },
-    {
-      id: "task-3",
-      title: "Call mom",
-      category: "personal",
-      priority: "medium",
-      estimatedMinutes: 20,
-      notes: "Schedule for after work hours."
-    },
-    {
-      id: "task-4",
-      title: "Buy groceries",
-      category: "personal",
-      priority: "low",
-      estimatedMinutes: 30,
-      notes: null
+      "id": "unique-id-1",
+      "title": "Task title",
+      "category": "one of: work | personal | health | finance | creative | social | admin",
+      "priority": "high | medium | low",
+      "estimatedMinutes": 30,
+      "notes": "optional clarifying note or null",
+      "dueDate": "YYYY-MM-DD or null",
+      "dueLabel": "human-readable due phrase or null",
+      "project": "project or context tag or null",
+      "actionType": "email | call | meet | buy | review | submit | plan | remind | write | schedule | other",
+      "actionVerb": "triggering verb/phrase or null"
     }
   ],
-  insights: [
-    "You're carrying both work pressure and personal obligations — try to timebox personal tasks so they don't bleed into focus time.",
-    "The deadline anxiety is valid, but breaking the report into smaller chunks will make it feel more manageable."
+  "insights": [
+    "One pattern or observation about their mental state or workload",
+    "Another insight if relevant"
   ]
-};
+}
+
+${PROCESS_SYSTEM_PROMPT_EXTENSION}
+
+Rules:
+- Extract ALL tasks mentioned, even implicitly (e.g. "remind me tomorrow to email Sarah about budget" is one task with due tomorrow, Finance project, email action)
+- Be empathetic but direct
+- estimatedMinutes should be realistic (5–240)
+- Maximum 6 tasks, prioritize ruthlessly
+- insights should feel personal and perceptive, not generic
+- If the dump is very short, still do your best`;
 
 router.post('/', async (req: Request, res: Response) => {
   try {
@@ -57,15 +62,56 @@ router.post('/', async (req: Request, res: Response) => {
       return res.status(400).json({ error: 'Text is required' });
     }
 
-    // Simulate a realistic API delay
-    await new Promise(resolve => setTimeout(resolve, 1500));
+    if (text.length > 5000) {
+      return res.status(400).json({ error: 'Text too long. Max 5000 characters.' });
+    }
+
+    const today = new Date();
+    const todayISO = today.toISOString().slice(0, 10);
+
+    console.log(`[process] ${text.trim().length} chars → Anthropic`);
+
+    const model = process.env.ANTHROPIC_MODEL?.trim() || 'claude-sonnet-4-6';
+
+    const message = await getClient().messages.create({
+      model,
+      max_tokens: 2000,
+      system: SYSTEM_PROMPT,
+      messages: [
+        {
+          role: 'user',
+          content: `Today's date: ${todayISO} (${today.toLocaleDateString('en-US', { weekday: 'long' })})\n\nHere's my brain dump:\n\n${text.trim()}`,
+        },
+      ],
+    });
+
+    const rawContent = message.content[0];
+    if (rawContent.type !== 'text') {
+      return res.status(500).json({ error: 'Unexpected response type from AI' });
+    }
+
+    const cleanedText = rawContent.text
+      .replace(/```json\n?/g, '')
+      .replace(/```\n?/g, '')
+      .trim();
+
+    let parsed;
+    try {
+      parsed = JSON.parse(cleanedText);
+    } catch {
+      console.error('Failed to parse AI response:', rawContent.text);
+      return res.status(500).json({ error: 'Failed to parse AI response' });
+    }
+
+    const data = enrichProcessedDump(parsed, text.trim(), today);
+
+    console.log(`[process] done — ${data.tasks.length} tasks, mood: ${data.mood}`);
 
     return res.json({
       success: true,
-      data: MOCK_RESPONSE,
-      processedAt: new Date().toISOString()
+      data,
+      processedAt: new Date().toISOString(),
     });
-
   } catch (error: unknown) {
     console.error('Process error:', error);
     const message = error instanceof Error ? error.message : 'Internal server error';

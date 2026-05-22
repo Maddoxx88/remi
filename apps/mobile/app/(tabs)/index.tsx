@@ -16,6 +16,7 @@ import { useRouter, useFocusEffect } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { processDump } from '../../services/api';
+import { API_BASE_URL } from '../../services/config';
 import { saveToHistory, getHistory, DumpEntry } from '../../services/storage';
 import { consumePendingTranscript } from '../../services/voiceSession';
 import { Colors, Fonts, Spacing, Radius } from '../../services/theme';
@@ -124,8 +125,11 @@ export default function DumpScreen() {
       setHistory(await getHistory());
       router.push({ pathname: '/result', params: { entryId: entry.id } });
       setText('');
-    } catch (err: any) {
-      Alert.alert('Something went wrong', err.message || 'Please try again.');
+    } catch (err: unknown) {
+      const message =
+        err instanceof Error ? err.message : 'Please try again.';
+      if (__DEV__) console.warn('[process]', API_BASE_URL, message);
+      Alert.alert('Something went wrong', message);
     } finally {
       setLoading(false);
     }

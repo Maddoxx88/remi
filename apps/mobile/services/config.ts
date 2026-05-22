@@ -1,5 +1,18 @@
-// Change this to your local IP when testing on a physical device
-// e.g. 'http://192.168.1.100:3001'
+import { Platform } from 'react-native';
+import Constants from 'expo-constants';
+
+/** Dev API host derived from Expo Metro (same machine as `npx expo start`). */
+function getDevApiHost(): string {
+  const debuggerHost = Constants.expoGoConfig?.debuggerHost;
+  if (debuggerHost) {
+    return debuggerHost.split(':')[0];
+  }
+
+  // iOS Simulator / Android emulator fallbacks
+  if (Platform.OS === 'android') return '10.0.2.2';
+  return 'localhost';
+}
+
 export const API_BASE_URL = __DEV__
-  ? 'http://192.168.1.217:3001'
+  ? `http://${getDevApiHost()}:3001`
   : 'https://your-production-url.com';

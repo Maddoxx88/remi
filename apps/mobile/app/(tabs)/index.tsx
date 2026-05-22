@@ -64,24 +64,37 @@ function LogoMark() {
   );
 }
 
-function HeroIllustration() {
+type InputMode = null | 'chat';
+
+function ModeButton({
+  label,
+  icon,
+  backgroundColor,
+  onPress,
+  flex = 1,
+}: {
+  label: string;
+  icon: keyof typeof Ionicons.glyphMap;
+  backgroundColor: string;
+  onPress: () => void;
+  flex?: number;
+}) {
   return (
-    <View style={styles.heroArt}>
-      <View style={styles.heroCircle} />
-      <View style={styles.heroFigure}>
-        <View style={styles.heroHead} />
-        <View style={styles.heroBody} />
-        <View style={styles.heroBox}>
-          <Ionicons name="flash" size={14} color={Colors.heroBlue} />
-        </View>
-      </View>
-    </View>
+    <TouchableOpacity
+      style={[styles.modeBtn, { backgroundColor, flex }]}
+      onPress={onPress}
+      activeOpacity={0.88}
+    >
+      <Ionicons name={icon} size={22} color={Colors.darkCardText} />
+      <Text style={styles.modeBtnLabel}>{label}</Text>
+    </TouchableOpacity>
   );
 }
 
 export default function DumpScreen() {
   const [text, setText] = useState('');
   const [loading, setLoading] = useState(false);
+  const [inputMode, setInputMode] = useState<InputMode>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [history, setHistory] = useState<DumpEntry[]>([]);
   const [discoverIndex, setDiscoverIndex] = useState(0);
@@ -98,9 +111,24 @@ export default function DumpScreen() {
       const transcript = consumePendingTranscript();
       if (transcript) {
         setText(prev => (prev ? `${prev} ${transcript}` : transcript));
+        setInputMode('chat');
       }
     }, []),
   );
+
+  function openChat() {
+    setInputMode('chat');
+    setTimeout(() => inputRef.current?.focus(), 150);
+  }
+
+  function closeChat() {
+    setInputMode(null);
+    inputRef.current?.blur();
+  }
+
+  function openVoice() {
+    router.push('/voice');
+  }
 
   const filteredRecent = useMemo(() => {
     const q = searchQuery.trim().toLowerCase();
@@ -139,7 +167,8 @@ export default function DumpScreen() {
     const starter = STARTERS[key];
     if (starter) {
       setText(starter);
-      inputRef.current?.focus();
+      setInputMode('chat');
+      setTimeout(() => inputRef.current?.focus(), 150);
     }
   }
 
@@ -174,69 +203,75 @@ export default function DumpScreen() {
             <Text style={styles.prompt}>{PROMPTS[promptIndex]}</Text>
           </View>
 
-          {/* Main feature grid */}
-          <View style={styles.featureGrid}>
-            {/* Left: hero dump card */}
-            <View style={styles.heroColumn}>
-              <View style={styles.heroCard}>
-                <View style={styles.heroGradientTop} />
-                <View style={styles.heroGradientBottom} />
-                <HeroIllustration />
+          {/* Mode picker — voice (left) + chat (right) */}
+          {inputMode === null && (
+            <View style={styles.modeGrid}>
+              <ModeButton
+                label="Talk with Remi"
+                icon="mic-outline"
+                backgroundColor={Colors.nameAccent}
+                onPress={openVoice}
+                flex={1.15}
+              />
+              <ModeButton
+                label="Chat with Remi"
+                icon="chatbubble-outline"
+                backgroundColor={Colors.darkCard}
+                onPress={openChat}
+              />
+            </View>
+          )}
 
-                <View style={styles.heroInputRow}>
-                  <TextInput
-                    ref={inputRef}
-                    style={styles.heroInput}
-                    value={text}
-                    onChangeText={t => setText(t.slice(0, CHAR_LIMIT))}
-                    placeholder="Dump your thoughts..."
-                    placeholderTextColor={Colors.textDim}
-                    multiline
-                    maxLength={CHAR_LIMIT}
-                  />
-                  <TouchableOpacity
-                    style={[styles.heroSubmit, (!isReady || loading) && styles.heroSubmitDisabled]}
-                    onPress={handleProcess}
-                    disabled={!isReady || loading}
-                  >
-                    {loading ? (
-                      <ActivityIndicator size="small" color="#fff" />
-                    ) : (
-                      <Ionicons name="sparkles" size={18} color="#fff" />
-                    )}
-                  </TouchableOpacity>
-                </View>
+          {/* Chat panel — shown after tapping Chat */}
+          {inputMode === 'chat' && (
+            <View style={styles.chatPanel}>
+              <TouchableOpacity style={styles.chatBack} onPress={closeChat} hitSlop={12}>
+                <Ionicons name="chevron-back" size={20} color={Colors.textMuted} />
+                <Text style={styles.chatBackText}>Back</Text>
+              </TouchableOpacity>
+
+              <View style={styles.chatBox}>
+                <TextInput
+                  ref={inputRef}
+                  style={styles.chatInput}
+                  value={text}
+                  onChangeText={t => setText(t.slice(0, CHAR_LIMIT))}
+                  placeholder="Dump your thoughts — tasks, worries, ideas, anything..."
+                  placeholderTextColor={Colors.textDim}
+                  multiline
+                  textAlignVertical="top"
+                  maxLength={CHAR_LIMIT}
+                />
               </View>
-              {charCount > 0 && (
+
+              <View style={styles.chatFooter}>
                 <Text style={styles.charHint}>
-                  {charCount} / {CHAR_LIMIT}
+                  {charCount > 0 ? `${charCount} / ${CHAR_LIMIT}` : 'Min 11 characters to organize'}
                 </Text>
-              )}
+                <TouchableOpacity
+                  style={[styles.organizeBtn, (!isReady || loading) && styles.organizeBtnDisabled]}
+                  onPress={handleProcess}
+                  disabled={!isReady || loading}
+                  activeOpacity={0.85}
+                >
+                  {loading ? (
+                    <ActivityIndicator size="small" color={Colors.text} />
+                  ) : (
+                    <>
+                      <Text style={[styles.organizeBtnText, !isReady && styles.organizeBtnTextDisabled]}>
+                        Organize
+                      </Text>
+                      <Ionicons
+                        name="sparkles"
+                        size={16}
+                        color={isReady ? Colors.text : Colors.textDim}
+                      />
+                    </>
+                  )}
+                </TouchableOpacity>
+              </View>
             </View>
-
-            {/* Right: action cards */}
-            <View style={styles.sideColumn}>
-              <TouchableOpacity
-                style={styles.darkCard}
-                onPress={() => inputRef.current?.focus()}
-                activeOpacity={0.9}
-              >
-                <View style={styles.cardIconBadge}>
-                  <Ionicons name="create-outline" size={16} color={Colors.text} />
-                </View>
-                <Text style={styles.darkCardText}>Start typing</Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                style={[styles.sageCard, { flex: 1 }]}
-                onPress={() => router.push('/voice')}
-                activeOpacity={0.9}
-              >
-                <Ionicons name="mic-outline" size={22} color={Colors.textMuted} />
-                <Text style={styles.sageCardText}>Voice input</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
+          )}
 
           {/* Discover */}
           <Text style={styles.sectionTitle}>Discover</Text>
@@ -340,9 +375,6 @@ export default function DumpScreen() {
   );
 }
 
-const CARD_GAP = Spacing.sm;
-const GRID_HEIGHT = 220;
-
 const styles = StyleSheet.create({
   safe: {
     flex: 1,
@@ -409,156 +441,90 @@ const styles = StyleSheet.create({
     color: Colors.textMuted,
     lineHeight: 22,
   },
-  featureGrid: {
+  modeGrid: {
     flexDirection: 'row',
-    gap: CARD_GAP,
-    height: GRID_HEIGHT,
+    gap: Spacing.sm,
     marginBottom: Spacing.lg,
   },
-  heroColumn: {
-    flex: 1.15,
-  },
-  sideColumn: {
-    flex: 1,
-    gap: CARD_GAP,
-  },
-  heroCard: {
-    flex: 1,
-    borderRadius: Radius.xl,
-    overflow: 'hidden',
-    backgroundColor: Colors.heroBlueLight,
-    justifyContent: 'space-between',
-  },
-  heroGradientTop: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: Colors.heroBlue,
-    height: '55%',
-  },
-  heroGradientBottom: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    height: '50%',
-    backgroundColor: Colors.heroBlueLight,
-  },
-  heroArt: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingTop: Spacing.md,
-  },
-  heroCircle: {
-    position: 'absolute',
-    width: 100,
-    height: 100,
-    borderRadius: 50,
-    backgroundColor: 'rgba(255,255,255,0.25)',
-    top: 20,
-  },
-  heroFigure: {
-    alignItems: 'center',
-    marginTop: 8,
-  },
-  heroHead: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
-    backgroundColor: '#F5D0B0',
-    marginBottom: 4,
-  },
-  heroBody: {
-    width: 48,
-    height: 56,
-    borderRadius: 12,
-    backgroundColor: '#fff',
-  },
-  heroBox: {
-    position: 'absolute',
-    right: -28,
-    bottom: 8,
-    width: 36,
-    height: 36,
-    borderRadius: 8,
-    backgroundColor: '#fff',
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 2,
-    borderColor: Colors.heroBlue,
-  },
-  heroInputRow: {
+  modeBtn: {
     flexDirection: 'row',
-    alignItems: 'flex-end',
-    margin: Spacing.sm,
-    backgroundColor: Colors.bgCard,
-    borderRadius: Radius.lg,
-    paddingLeft: Spacing.md,
-    paddingVertical: 6,
-    paddingRight: 6,
-    gap: Spacing.xs,
-    minHeight: 48,
+    alignItems: 'center',
+    gap: Spacing.sm,
+    borderRadius: Radius.xl,
+    paddingVertical: 14,
+    paddingHorizontal: Spacing.md,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.22)',
   },
-  heroInput: {
-    flex: 1,
+  modeBtnLabel: {
     fontFamily: Fonts.body,
     fontSize: 14,
-    color: Colors.text,
-    maxHeight: 72,
-    paddingVertical: 8,
-  },
-  heroSubmit: {
-    width: 40,
-    height: 40,
-    borderRadius: Radius.md,
-    backgroundColor: Colors.darkCard,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  heroSubmitDisabled: {
-    backgroundColor: Colors.border,
-  },
-  charHint: {
-    fontFamily: Fonts.mono,
-    fontSize: 10,
-    color: Colors.textDim,
-    marginTop: 4,
-    marginLeft: 4,
-  },
-  darkCard: {
-    flex: 1,
-    backgroundColor: Colors.darkCard,
-    borderRadius: Radius.xl,
-    padding: Spacing.md,
-    justifyContent: 'space-between',
-  },
-  cardIconBadge: {
-    width: 32,
-    height: 32,
-    borderRadius: 10,
-    backgroundColor: Colors.accent,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  darkCardText: {
-    fontFamily: Fonts.body,
-    fontSize: 15,
+    fontWeight: '500',
     color: Colors.darkCardText,
-    fontWeight: '600',
-  },
-  sageCard: {
     flex: 1,
-    backgroundColor: Colors.sage,
-    borderRadius: Radius.xl,
-    padding: Spacing.md,
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: Spacing.sm,
   },
-  sageCardText: {
+  chatPanel: {
+    marginBottom: Spacing.lg,
+  },
+  chatBack: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    marginBottom: Spacing.sm,
+  },
+  chatBackText: {
     fontFamily: Fonts.body,
     fontSize: 14,
     color: Colors.textMuted,
-    fontWeight: '500',
+  },
+  chatBox: {
+    backgroundColor: Colors.bgCard,
+    borderRadius: Radius.xl,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    padding: Spacing.lg,
+    minHeight: 160,
+    marginBottom: Spacing.sm,
+  },
+  chatInput: {
+    fontFamily: Fonts.body,
+    fontSize: 16,
+    color: Colors.text,
+    lineHeight: 26,
+    minHeight: 120,
+  },
+  chatFooter: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: Spacing.md,
+  },
+  charHint: {
+    fontFamily: Fonts.mono,
+    fontSize: 11,
+    color: Colors.textDim,
+    flex: 1,
+  },
+  organizeBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: Colors.accent,
+    paddingHorizontal: Spacing.lg,
+    paddingVertical: 12,
+    borderRadius: Radius.full,
+  },
+  organizeBtnDisabled: {
+    backgroundColor: Colors.bgElevated,
+  },
+  organizeBtnText: {
+    fontFamily: Fonts.body,
+    fontSize: 15,
+    fontWeight: '600',
+    color: Colors.text,
+  },
+  organizeBtnTextDisabled: {
+    color: Colors.textDim,
   },
   sectionTitle: {
     fontFamily: Fonts.body,

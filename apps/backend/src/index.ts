@@ -9,7 +9,11 @@ import { apiLimiter, processLimiter, transcribeLimiter } from './middleware/rate
 const app = express();
 const PORT = process.env.PORT || 3001;
 
-if (process.env.TRUST_PROXY === '1') {
+const behindProxy =
+  process.env.TRUST_PROXY === '1' ||
+  Boolean(process.env.RENDER) ||
+  Boolean(process.env.RAILWAY_ENVIRONMENT);
+if (behindProxy) {
   app.set('trust proxy', 1);
 }
 

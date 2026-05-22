@@ -27,7 +27,8 @@
       "package": "com.remi.app",
       "newArchEnabled": false,
       "permissions": [
-        "android.permission.RECORD_AUDIO"
+        "android.permission.RECORD_AUDIO",
+        "android.permission.MODIFY_AUDIO_SETTINGS"
       ]
     },
     "web": {
@@ -42,6 +43,12 @@
     "experiments": {
       "typedRoutes": true
     },
-    "scheme": "remi"
+    "scheme": "remi",
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "fab33146-7cd1-46b8-b0c3-f3ffe89dabf9"
+      }
+    }
   }
 }

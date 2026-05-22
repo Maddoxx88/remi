@@ -76,7 +76,7 @@ export const API_BASE_URL = __DEV__
   : 'https://api.yourdomain.com';   // ← your deployed backend
 ```
 
-Deploy the backend somewhere with HTTPS (Railway, Render, Fly.io, AWS, etc.), set env vars there, and optionally `TRUST_PROXY=1` if behind a reverse proxy.
+**Fastest deploy:** [Render](https://render.com) using the repo’s `render.yaml` — step-by-step in [`apps/backend/DEPLOY.md`](apps/backend/DEPLOY.md). Then set `EXPO_PUBLIC_API_URL` to your `https://….onrender.com` URL before an EAS build.
 
 ---
 

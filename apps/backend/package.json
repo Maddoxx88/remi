@@ -3,6 +3,9 @@
   "version": "1.0.0",
   "description": "Remi AI Thought Partner - Backend",
   "main": "dist/index.js",
+  "engines": {
+    "node": ">=20"
+  },
   "scripts": {
     "dev": "ts-node src/index.ts",
     "build": "tsc",

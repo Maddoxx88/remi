@@ -13,9 +13,9 @@ function getDevApiHost(): string {
   return 'localhost';
 }
 
-/** Set via EAS / `.env`: EXPO_PUBLIC_API_URL=https://your-api.onrender.com */
+/** Override via EAS env: EXPO_PUBLIC_API_URL */
 const PRODUCTION_API_URL =
-  process.env.EXPO_PUBLIC_API_URL?.trim() || 'https://YOUR_RENDER_URL.onrender.com';
+  process.env.EXPO_PUBLIC_API_URL?.trim() || 'https://remi-oa70.onrender.com';
 
 export const API_BASE_URL = __DEV__
   ? `http://${getDevApiHost()}:3001`

@@ -16,6 +16,7 @@ import {
 } from '../../services/insightsAnalytics';
 import MoodTrendChart from '../../components/MoodTrendChart';
 import CategoryBreakdown from '../../components/CategoryBreakdown';
+import TabEmptyState from '../../components/TabEmptyState';
 import { Colors, Fonts, Spacing, Radius } from '../../services/theme';
 
 function StatCard({
@@ -59,28 +60,24 @@ function Section({
 export default function InsightsScreen() {
   const [snapshot, setSnapshot] = useState<InsightsSnapshot | null>(null);
   const [hasHistory, setHasHistory] = useState(false);
+  const [loaded, setLoaded] = useState(false);
 
   useFocusEffect(
     useCallback(() => {
       getHistory().then(entries => {
         setHasHistory(entries.length > 0);
         setSnapshot(computeInsights(entries));
+        setLoaded(true);
       });
     }, []),
   );
 
+  if (!loaded) {
+    return <SafeAreaView style={styles.safe} edges={['top']} />;
+  }
+
   if (!hasHistory || !snapshot) {
-    return (
-      <SafeAreaView style={styles.emptyContainer} edges={['top']}>
-        <View style={styles.emptyIconWrap}>
-          <Text style={styles.emptyIcon}>📊</Text>
-        </View>
-        <Text style={styles.emptyTitle}>Insights unlock with history</Text>
-        <Text style={styles.emptySubtitle}>
-          Process a few brain dumps and Remi will chart your mood, tasks, and weekly patterns here.
-        </Text>
-      </SafeAreaView>
-    );
+    return <TabEmptyState variant="insights" />;
   }
 
   const clarityDisplay = formatClarityDisplay(snapshot.clarityMinutes);
@@ -237,39 +234,6 @@ const styles = StyleSheet.create({
     fontFamily: Fonts.body,
     fontSize: 15,
     color: Colors.text,
-    lineHeight: 22,
-  },
-  emptyContainer: {
-    flex: 1,
-    backgroundColor: Colors.bg,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: Spacing.xl,
-  },
-  emptyIconWrap: {
-    width: 80,
-    height: 80,
-    borderRadius: 24,
-    backgroundColor: Colors.bgCard,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: Spacing.lg,
-    borderWidth: 1,
-    borderColor: Colors.border,
-  },
-  emptyIcon: { fontSize: 36 },
-  emptyTitle: {
-    fontFamily: Fonts.heading,
-    fontSize: 24,
-    color: Colors.text,
-    marginBottom: Spacing.sm,
-    textAlign: 'center',
-  },
-  emptySubtitle: {
-    fontFamily: Fonts.body,
-    fontSize: 15,
-    color: Colors.textMuted,
-    textAlign: 'center',
     lineHeight: 22,
   },
 });

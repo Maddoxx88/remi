@@ -8,6 +8,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { getHistory, deleteEntry, clearHistory, DumpEntry } from '../../services/storage';
 import { Colors, Fonts, Spacing, Radius } from '../../services/theme';
 import MoodBadge from '../../components/MoodBadge';
+import TabEmptyState from '../../components/TabEmptyState';
 
 function formatDate(iso: string) {
   const d = new Date(iso);
@@ -84,15 +85,7 @@ export default function HistoryScreen() {
   }
 
   if (entries.length === 0) {
-    return (
-      <View style={styles.emptyContainer}>
-        <View style={styles.emptyIconWrap}>
-          <Text style={styles.emptyIcon}>📖</Text>
-        </View>
-        <Text style={styles.emptyTitle}>No history yet</Text>
-        <Text style={styles.emptySubtitle}>Your processed dumps will appear here.</Text>
-      </View>
-    );
+    return <TabEmptyState variant="history" />;
   }
 
   return (
@@ -182,19 +175,4 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   cardStatText: { fontFamily: Fonts.body, fontSize: 12, color: Colors.textMuted },
-  emptyContainer: {
-    flex: 1, backgroundColor: Colors.bg,
-    alignItems: 'center' as const, justifyContent: 'center' as const,
-    paddingHorizontal: Spacing.xl,
-  },
-  emptyIconWrap: {
-    width: 80, height: 80, borderRadius: 24,
-    backgroundColor: Colors.bgCard,
-    alignItems: 'center' as const, justifyContent: 'center' as const,
-    marginBottom: Spacing.lg,
-    borderWidth: 1, borderColor: Colors.border,
-  },
-  emptyIcon: { fontSize: 36 },
-  emptyTitle: { fontFamily: Fonts.heading, fontSize: 24, color: Colors.text, marginBottom: Spacing.sm },
-  emptySubtitle: { fontFamily: Fonts.body, fontSize: 15, color: Colors.textMuted, textAlign: 'center' as const },
 });

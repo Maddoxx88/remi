@@ -20,8 +20,7 @@ import { API_BASE_URL } from '../../services/config';
 import { saveToHistory, getHistory, DumpEntry } from '../../services/storage';
 import { consumePendingTranscript } from '../../services/voiceSession';
 import RemiLogo from '../../components/RemiLogo';
-import { Colors, Spacing, Radius } from '../../services/theme';
-import { HomeFonts } from '../../services/homeTypography';
+import { Colors, Fonts, Spacing, Radius } from '../../services/theme';
 
 const PROMPTS = [
   "What's on your mind today?",
@@ -397,7 +396,7 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   logoWordmark: {
-    fontFamily: HomeFonts.bold,
+    fontFamily: Fonts.bold,
     fontSize: 22,
     color: Colors.text,
     letterSpacing: -0.5,
@@ -416,7 +415,7 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.lg,
   },
   greeting: {
-    fontFamily: HomeFonts.bold,
+    fontFamily: Fonts.bold,
     fontSize: 32,
     color: Colors.text,
     marginBottom: 4,
@@ -426,7 +425,7 @@ const styles = StyleSheet.create({
     color: Colors.nameAccent,
   },
   prompt: {
-    fontFamily: HomeFonts.regular,
+    fontFamily: Fonts.regular,
     fontSize: 16,
     color: Colors.textMuted,
     lineHeight: 24,
@@ -447,7 +446,7 @@ const styles = StyleSheet.create({
     borderColor: 'rgba(255,255,255,0.22)',
   },
   modeBtnLabel: {
-    fontFamily: HomeFonts.medium,
+    fontFamily: Fonts.medium,
     fontSize: 14,
     color: Colors.darkCardText,
     flex: 1,
@@ -462,7 +461,7 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.sm,
   },
   chatBackText: {
-    fontFamily: HomeFonts.medium,
+    fontFamily: Fonts.medium,
     fontSize: 14,
     color: Colors.textMuted,
   },
@@ -476,7 +475,7 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.sm,
   },
   chatInput: {
-    fontFamily: HomeFonts.regular,
+    fontFamily: Fonts.regular,
     fontSize: 16,
     color: Colors.text,
     lineHeight: 26,
@@ -489,7 +488,7 @@ const styles = StyleSheet.create({
     gap: Spacing.md,
   },
   charHint: {
-    fontFamily: HomeFonts.medium,
+    fontFamily: Fonts.medium,
     fontSize: 11,
     color: Colors.textDim,
     flex: 1,
@@ -507,7 +506,7 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.bgElevated,
   },
   organizeBtnText: {
-    fontFamily: HomeFonts.semiBold,
+    fontFamily: Fonts.semiBold,
     fontSize: 15,
     color: Colors.text,
   },
@@ -515,7 +514,7 @@ const styles = StyleSheet.create({
     color: Colors.textDim,
   },
   sectionTitle: {
-    fontFamily: HomeFonts.semiBold,
+    fontFamily: Fonts.semiBold,
     fontSize: 18,
     color: Colors.text,
     marginBottom: Spacing.md,
@@ -533,7 +532,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
   },
   discoverLabel: {
-    fontFamily: HomeFonts.medium,
+    fontFamily: Fonts.medium,
     fontSize: 14,
     color: Colors.text,
   },
@@ -573,7 +572,7 @@ const styles = StyleSheet.create({
   },
   searchInput: {
     flex: 1,
-    fontFamily: HomeFonts.regular,
+    fontFamily: Fonts.regular,
     fontSize: 15,
     color: Colors.text,
     padding: 0,
@@ -587,13 +586,13 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   recentTitle: {
-    fontFamily: HomeFonts.medium,
+    fontFamily: Fonts.medium,
     fontSize: 14,
     color: Colors.textDim,
     marginBottom: Spacing.md,
   },
   recentEmpty: {
-    fontFamily: HomeFonts.regular,
+    fontFamily: Fonts.regular,
     fontSize: 14,
     color: Colors.textDim,
     lineHeight: 20,
@@ -614,13 +613,13 @@ const styles = StyleSheet.create({
   },
   recentText: {
     flex: 1,
-    fontFamily: HomeFonts.regular,
+    fontFamily: Fonts.regular,
     fontSize: 14,
     color: Colors.text,
     lineHeight: 20,
   },
   reassurance: {
-    fontFamily: HomeFonts.regular,
+    fontFamily: Fonts.regular,
     fontSize: 12,
     color: Colors.textDim,
     textAlign: 'center',

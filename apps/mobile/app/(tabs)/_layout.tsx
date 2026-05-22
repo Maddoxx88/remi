@@ -1,12 +1,21 @@
 import { Tabs } from 'expo-router';
 import { View, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import RemiLogo from '../../components/RemiLogo';
 import { Colors, Fonts } from '../../services/theme';
 
 function TabIcon({ name, focused }: { name: any; focused: boolean }) {
   return (
     <View style={[styles.iconWrap, focused && styles.iconActive]}>
       <Ionicons name={name} size={20} color={focused ? Colors.text : Colors.textDim} />
+    </View>
+  );
+}
+
+function HomeTabIcon({ focused }: { focused: boolean }) {
+  return (
+    <View style={[styles.iconWrap, focused && styles.iconActive]}>
+      <RemiLogo size={22} />
     </View>
   );
 }
@@ -26,9 +35,7 @@ export default function TabLayout() {
         name="index"
         options={{
           title: 'Dump',
-          tabBarIcon: ({ focused }) => (
-            <TabIcon name={focused ? 'flash' : 'flash-outline'} focused={focused} />
-          ),
+          tabBarIcon: ({ focused }) => <HomeTabIcon focused={focused} />,
         }}
       />
       <Tabs.Screen
@@ -54,7 +61,7 @@ const styles = StyleSheet.create({
     paddingTop: 8,
   },
   tabLabel: {
-    fontFamily: Fonts.body,
+    fontFamily: Fonts.medium,
     fontSize: 11,
     letterSpacing: 0.3,
   },

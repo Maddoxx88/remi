@@ -49,10 +49,14 @@ export const Colors = {
   creative: '#D4A8FF',
 };
 
+/** Plus Jakarta Sans — used app-wide */
 export const Fonts = {
-  heading: 'DMSerifDisplay',
-  body: 'DMSans',
-  mono: 'SpaceMono',
+  heading: 'PlusJakartaSans_700Bold',
+  body: 'PlusJakartaSans_400Regular',
+  medium: 'PlusJakartaSans_500Medium',
+  semiBold: 'PlusJakartaSans_600SemiBold',
+  bold: 'PlusJakartaSans_700Bold',
+  mono: 'PlusJakartaSans_500Medium',
 };
 
 export const Spacing = {

@@ -18,11 +18,6 @@ export default function RootLayout() {
   const [onboardingDone, setOnboardingDone] = useState<boolean | null>(null);
 
   const [loaded] = useFonts({
-    DMSerifDisplay: require('../assets/fonts/DMSerifDisplay-Regular.ttf'),
-    DMSans: require('../assets/fonts/DMSans-Regular.ttf'),
-    'DMSans-Medium': require('../assets/fonts/DMSans-Medium.ttf'),
-    'DMSans-SemiBold': require('../assets/fonts/DMSans-SemiBold.ttf'),
-    SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
     PlusJakartaSans_400Regular,
     PlusJakartaSans_500Medium,
     PlusJakartaSans_600SemiBold,

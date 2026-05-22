@@ -9,6 +9,7 @@ import { getHistory, DumpEntry } from '../services/storage';
 import { Task, ProcessedDump } from '../services/api';
 import { Colors, Fonts, Spacing, Radius } from '../services/theme';
 import MoodBadge from '../components/MoodBadge';
+import RemiLogo from '../components/RemiLogo';
 import TaskCard from '../components/TaskCard';
 
 export default function ResultScreen() {
@@ -68,7 +69,7 @@ export default function ResultScreen() {
         <View style={styles.focusCard}>
           <View style={styles.focusHeader}>
             <View style={styles.focusIconWrap}>
-              <Ionicons name="flash" size={14} color={Colors.text} />
+              <RemiLogo size={18} />
             </View>
             <Text style={styles.focusLabel}>Focus on this first</Text>
           </View>

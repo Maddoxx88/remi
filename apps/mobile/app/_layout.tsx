@@ -14,6 +14,11 @@ import { hasCompletedOnboarding } from './onboarding';
 
 SplashScreen.preventAutoHideAsync();
 
+const screenOptions = {
+  headerShown: false,
+  contentStyle: { backgroundColor: Colors.bg },
+};
+
 export default function RootLayout() {
   const [onboardingDone, setOnboardingDone] = useState<boolean | null>(null);
 
@@ -25,11 +30,7 @@ export default function RootLayout() {
   });
 
   useEffect(() => {
-    async function init() {
-      const done = await hasCompletedOnboarding();
-      setOnboardingDone(done);
-    }
-    init();
+    hasCompletedOnboarding().then(setOnboardingDone);
   }, []);
 
   useEffect(() => {
@@ -40,17 +41,22 @@ export default function RootLayout() {
 
   if (!loaded || onboardingDone === null) return null;
 
+  // Expo Router ignores initialRouteName — split stacks so first launch always hits onboarding
+  if (!onboardingDone) {
+    return (
+      <>
+        <StatusBar style="dark" />
+        <Stack screenOptions={screenOptions}>
+          <Stack.Screen name="onboarding" />
+        </Stack>
+      </>
+    );
+  }
+
   return (
     <>
       <StatusBar style="dark" />
-      <Stack
-        screenOptions={{
-          headerShown: false,
-          contentStyle: { backgroundColor: Colors.bg },
-        }}
-        initialRouteName={onboardingDone ? '(tabs)' : 'onboarding'}
-      >
-        <Stack.Screen name="onboarding" />
+      <Stack screenOptions={screenOptions}>
         <Stack.Screen name="(tabs)" />
         <Stack.Screen name="result" />
         <Stack.Screen

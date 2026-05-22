@@ -49,6 +49,10 @@ export async function markOnboardingComplete() {
   await AsyncStorage.setItem(ONBOARDING_KEY, 'true');
 }
 
+export async function resetOnboarding() {
+  await AsyncStorage.removeItem(ONBOARDING_KEY);
+}
+
 export async function hasCompletedOnboarding(): Promise<boolean> {
   const val = await AsyncStorage.getItem(ONBOARDING_KEY);
   return val === 'true';

@@ -8,6 +8,10 @@ export const Colors = {
   sage: '#E1E8D6',         // discover cards, secondary panels
   sageDark: '#D4DCC8',
 
+  // Brand logo (#83FE39 from official mark)
+  logo: '#83FE39',
+  logoInner: '#83FE3A',
+
   // Accents
   accent: '#C6F432',        // lime green (reference)
   accentSoft: '#C6F43220',

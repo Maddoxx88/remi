@@ -158,6 +158,14 @@ Output: `android/app/build/outputs/apk/release/app-release.apk`. You must config
 
 ---
 
+### Regenerate after logo changes
+
+`cd apps/mobile`
+# Replace assets/remi-logo.png, then:
+`npm run generate-icons`
+
+---
+
 ## API overview
 
 | Endpoint | Method | Description |

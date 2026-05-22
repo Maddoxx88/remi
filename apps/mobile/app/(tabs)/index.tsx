@@ -182,7 +182,7 @@ export default function DumpScreen() {
           {/* Header */}
           <View style={styles.header}>
             <View style={styles.logoRow}>
-              <RemiLogo size={36} />
+              <RemiLogo size={40} />
               <Text style={styles.logoWordmark}>remi</Text>
             </View>
             <TouchableOpacity

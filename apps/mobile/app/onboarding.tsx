@@ -12,6 +12,7 @@ import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Colors, Fonts, Spacing, Radius } from '../services/theme';
+import RemiLogo from '../components/RemiLogo';
 
 const { width } = Dimensions.get('window');
 
@@ -103,10 +104,15 @@ export default function OnboardingScreen() {
               { opacity: i === activeIndex ? fadeAnim : 1 },
             ]}
           >
-            {/* Emoji blob */}
-            <View style={[styles.emojiBlob, { backgroundColor: s.accent + '15' }]}>
-              <Text style={styles.emoji}>{s.emoji}</Text>
-            </View>
+            {s.key === 'dump' ? (
+              <View style={styles.logoBlob}>
+                <RemiLogo size={96} />
+              </View>
+            ) : (
+              <View style={[styles.emojiBlob, { backgroundColor: s.accent + '15' }]}>
+                <Text style={styles.emoji}>{s.emoji}</Text>
+              </View>
+            )}
 
             <Text style={styles.slideTitle}>{s.title}</Text>
             <Text style={styles.slideSubtitle}>{s.subtitle}</Text>
@@ -198,6 +204,13 @@ const styles = StyleSheet.create({
     justifyContent: 'center' as const,
     paddingHorizontal: Spacing.xl,
     paddingTop: 80,
+  },
+  logoBlob: {
+    width: 120,
+    height: 120,
+    alignItems: 'center' as const,
+    justifyContent: 'center' as const,
+    marginBottom: Spacing.xl,
   },
   emojiBlob: {
     width: 120,

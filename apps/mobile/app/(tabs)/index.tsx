@@ -76,7 +76,7 @@ function ModeButton({
       onPress={onPress}
       activeOpacity={0.88}
     >
-      <Ionicons name={icon} size={22} color={Colors.darkCardText} />
+      <Ionicons name={icon} size={28} color={Colors.darkCardText} />
       <Text style={styles.modeBtnLabel}>{label}</Text>
     </TouchableOpacity>
   );
@@ -201,14 +201,14 @@ export default function DumpScreen() {
           {inputMode === null && (
             <View style={styles.modeGrid}>
               <ModeButton
-                label="Talk with Remi"
+                label="Talk"
                 icon="mic-outline"
                 backgroundColor={Colors.nameAccent}
                 onPress={openVoice}
                 flex={1.15}
               />
               <ModeButton
-                label="Chat with Remi"
+                label="Chat"
                 icon="chatbubble-outline"
                 backgroundColor={Colors.darkCard}
                 onPress={openChat}
@@ -438,8 +438,9 @@ const styles = StyleSheet.create({
   modeBtn: {
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'center',
     gap: Spacing.sm,
-    borderRadius: Radius.xl,
+    borderRadius: Radius.xxl,
     paddingVertical: 14,
     paddingHorizontal: Spacing.md,
     borderWidth: 1,
@@ -447,9 +448,9 @@ const styles = StyleSheet.create({
   },
   modeBtnLabel: {
     fontFamily: Fonts.medium,
-    fontSize: 14,
+    fontSize: 16,
     color: Colors.darkCardText,
-    flex: 1,
+    textAlign: 'center',
   },
   chatPanel: {
     marginBottom: Spacing.lg,

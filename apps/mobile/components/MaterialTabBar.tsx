@@ -81,6 +81,7 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: Colors.tabInactive,
     letterSpacing: 0.1,
+    textAlign: 'center',
   },
   labelActive: {
     color: Colors.tabActive,

@@ -56,8 +56,6 @@ If you built the app yourself:
 
 ## Screenshots
 
-Add PNGs under [`docs/screenshots/`](docs/screenshots/) to replace placeholders below. See [`docs/screenshots/README.md`](docs/screenshots/README.md) for suggested filenames.
-
 | Home | Chat dump | Results |
 |:----:|:---------:|:-------:|
 | ![Home screen](docs/screenshots/home.png) | ![Chat](docs/screenshots/chat.png) | ![Results](docs/screenshots/results.png) |
@@ -65,8 +63,6 @@ Add PNGs under [`docs/screenshots/`](docs/screenshots/) to replace placeholders 
 | Insights | History |
 |:--------:|:-------:|
 | ![Insights](docs/screenshots/insights.png) | ![History](docs/screenshots/history.png) |
-
-*Until those files are added, images may not render on GitHub. Capture from emulator or device and commit `home.png`, `chat.png`, `results.png`, `insights.png`, `history.png`.*
 
 ---
 
